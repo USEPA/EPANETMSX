@@ -6,7 +6,7 @@
 **                 All Rights Reserved. See license information in LICENSE.TXT.
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **  VERSION:       1.1.00
-**  LAST UPDATE:   11/01/10
+**  LAST UPDATE:   04/14/2021
 ***********************************************************************/
 
 #ifndef MSXFUNCS_H

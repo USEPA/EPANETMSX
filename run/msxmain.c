@@ -2,13 +2,13 @@
 **  MODULE:        MSXMAIN.C
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   Main module of the EPANET Multi-Species Extension toolkit.
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
+**  COPYRIGHT:     Copyright (C) 2006 Feng Shang, Lewis Rossman, and James Uber.
 **                 All Rights Reserved. See license information in LICENSE.TXT.
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
 **  VERSION:       1.1.00
-**  LAST UPDATE:   04/14/2021
+**  LAST UPDATE:   10/05/08
 **
 **  EPANET-MSX is an extension of the EPANET program for modeling the fate
 **  and transport of multiple interacting chemical species within a water
@@ -29,7 +29,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <float.h>
-
 #include "epanet2.h"                   // EPANET toolkit header file
 #include "epanetmsx.h"                 // EPANET-MSX toolkit header file
 
@@ -58,27 +57,36 @@ int main(int argc, char *argv[])
     int    err, done = 1;
     long   t, tleft;
     long   oldHour, newHour;
+	char *inpFile, *repFile, *outFile;
+ 
 
 // --- check command line arguments
 
-    if ( argc < 4 )
+    if ( argc < 4 || argc > 5 )
     {
-        printf("\n Too few command line arguments.\n");
+		printf("\nInvalid command line arguments:\n\n");
+        printf("usage: epanet_msx <inp_file> <msx_file> <report_file> [binary_output_file]\n");
         return 0;
     }
-
+	inpFile=argv[1];
+	repFile=argv[3];
+	if(argc ==5) {
+		outFile=argv[4];
+	} else {
+		outFile="";
+	}
 // --- open EPANET file
 
     printf("\n... EPANET-MSX Version 1.1\n");                                  //1.1.00
     printf("\n  o Processing EPANET input file");
-    err = ENopen(argv[1], argv[3], "");
+    err = ENopen(inpFile, repFile, outFile);
     do
     {
         if (err)
         {
             printf("\n\n... Cannot read EPANET file; error code = %d\n", err);
             ENclose();
-            return 0;
+            return err;
         }
 
     // --- open the MSX input file

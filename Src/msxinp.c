@@ -9,10 +9,9 @@
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
 **  VERSION:       1.1.00
-**  LAST UPDATE:   11/01/10
+**  LAST UPDATE:   04/14/2021
 **  BUG FIX:	   BUG ID 09 (add roughness as a hydraulic variable) Feng Shang 01/29/2008	
 *******************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,6 +51,7 @@ enum InpErrorCodes {                   // Error codes (401 - 409)
     ERR_DUP_NAME,
     ERR_DUP_EXPR, 
     ERR_MATH_EXPR,
+    ERR_UNSUPPORTED_OPTION,
     INP_ERR_LAST};
 
 static char  *InpErrorTxt[INP_ERR_LAST-INP_ERR_FIRST] = {
@@ -64,7 +64,8 @@ static char  *InpErrorTxt[INP_ERR_LAST-INP_ERR_FIRST] = {
     "Error 406 (illegal use of a reserved name)",
     "Error 407 (name already used by another object)",
     "Error 408 (species already assigned an expression)", 
-    "Error 409 (illegal math expression)"};
+    "Error 409 (illegal math expression)",
+    "Error 410 (option no longer supported)"};
 
 //  Imported functions
 //--------------------
@@ -346,8 +347,8 @@ int  MSXinp_readMsxData()
 
 // --- check for errors
 
-    if ( checkCyclicTerms() ) errsum++;                                        //1.1.00
-    freeMatrix(TermArray);                                                     //1.1.00
+	if ( checkCyclicTerms() ) errsum++;                                        //1.1.00
+	freeMatrix(TermArray);                                                     //1.1.00
     if (errsum > 0) return ERR_MSX_INPUT;                                      //1.1.00
     return 0;
 }
@@ -566,9 +567,9 @@ int checkID(char *id)
     
 // --- check that id name not used before
 
-    if ( MSXproj_findObject(SPECIES, id)   > 0 ||
-         MSXproj_findObject(TERM, id)      > 0 ||
-         MSXproj_findObject(PARAMETER, id) > 0 ||
+    if ( MSXproj_findObject(SPECIES, id) > 0 ||
+         MSXproj_findObject(TERM, id)   > 0 ||
+         MSXproj_findObject(PARAMETER, id)  > 0 ||
          MSXproj_findObject(CONSTANT, id)  > 0
        ) return ERR_DUP_NAME;
     return 0;
@@ -698,6 +699,7 @@ int parseOption()
       case COMPILER_OPTION:                                                    //1.1.00
           k = MSXutils_findmatch(Tok[1], CompilerWords);
           if ( k < 0 ) return ERR_KEYWORD;
+ //         if ( k == 1 ) return ERR_UNSUPPORTED_OPTION;
     	  MSX.Compiler = k;
 	  break;
 
@@ -836,7 +838,7 @@ int parseTerm()
 */
 {
     int i, j;
-    int k;                                                                     //1.1.00
+	int k;                                                                     //1.1.00
     char s[MAXLINE+1] = "";
     MathExpr *expr;
 
@@ -849,11 +851,11 @@ int parseTerm()
 // --- reconstruct the expression string from its tokens
 
     for (j=1; j<Ntokens; j++)
-    {                                                                          //1.1.00
-        strcat(s, Tok[j]);                     
-        k = MSXproj_findObject(TERM, Tok[j]);                                  //1.1.00
-        if ( k > 0 ) TermArray[i][k] = 1.0;                                    //1.1.00
-    }                                                                          //1.1.00
+	{                                                                          //1.1.00
+		strcat(s, Tok[j]);                     
+		k = MSXproj_findObject(TERM, Tok[j]);                                  //1.1.00
+		if ( k > 0 ) TermArray[i][k] = 1.0;                                    //1.1.00
+	}                                                                          //1.1.00
     
 // --- convert expression into a postfix stack of op codes
 
@@ -1144,8 +1146,8 @@ int parsePattern()
 **    an error code (0 if no error)
 */
 {
-    int i, k;
-    double x;
+	int i, k;
+	double x;
     SnumList *listItem;
 
 // --- get time pattern index
@@ -1391,22 +1393,22 @@ int checkCyclicTerms()                                                         /
 **    1 if cyclic reference found or 0 if none found.
 */
 {
-    int i, j, n;
+	int i, j, n;
     char msg[MAXMSG+1];
 
-    n = MSX.Nobjects[TERM];
-    for (i=1; i<n; i++)
-    {
+	n = MSX.Nobjects[TERM];
+	for (i=1; i<n; i++)
+	{
         for (j=1; j<=n; j++) TermArray[0][j] = 0.0;
-        if ( traceTermPath(i, i, n) )
-        {
-            sprintf(msg, "Error 410 - term %s contains a cyclic reference.",
-                         MSX.Term[i].id);
+		if ( traceTermPath(i, i, n) )
+		{
+			sprintf(msg, "Error 410 - term %s contains a cyclic reference.",
+				MSX.Term[i].id);
             ENwriteline(msg);
-            return 1;
-        }
-    }
-    return 0;
+			return 1;
+		}
+	}
+	return 0;
 }
 
 //=============================================================================
@@ -1426,14 +1428,14 @@ int traceTermPath(int i, int istar, int n)                                     /
 **    1 if term istar found; 0 if not found.
 */
 {
-    int j;
+	int j;
     if ( TermArray[0][i] == 1.0 ) return 0;
-    TermArray[0][i] = 1.0;
-    for (j=1; j<=n; j++)
-    {
-        if ( TermArray[i][j] == 0.0 ) continue;
-        if ( j == istar ) return 1;
-        else if ( traceTermPath(j, istar, n) ) return 1;
-    }
-    return 0;
+	TermArray[0][i] = 1.0;
+	for (j=1; j<=n; j++)
+	{
+		if ( TermArray[i][j] == 0.0 ) continue;
+		if ( j == istar ) return 1;
+		else if ( traceTermPath(j, istar, n) ) return 1;
+	}
+	return 0;
 }

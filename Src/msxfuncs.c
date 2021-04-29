@@ -6,9 +6,8 @@
 **                 All Rights Reserved. See license information in LICENSE.TXT.
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **  VERSION:       1.1.00
-**  LAST UPDATE:   11/01/10
+**  LAST UPDATE:   04/14/2014
 *******************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 
 #include <stdio.h>
 
@@ -137,8 +136,7 @@ int MSXfuncs_run(char* cmdLine)
   si.wShowWindow = SW_HIDE;
 
   // --- execute the command line in a new console window
-
-  exitCode = CreateProcessA(NULL, cmdLine, NULL, NULL, 0,
+  exitCode = CreateProcess(NULL, cmdLine, NULL, NULL, 0,
 		 CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
   if (exitCode == 0)
   {
@@ -152,7 +150,7 @@ int MSXfuncs_run(char* cmdLine)
 
   // --- retrieve the error code produced by the program
 
-  GetExitCodeProcess(pi.hProcess, &exitCode);
+  BOOL rt = GetExitCodeProcess(pi.hProcess, &exitCode);
 
   // --- release handles
 

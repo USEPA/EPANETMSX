@@ -7,39 +7,30 @@
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
-**  VERSION:       1.1 
-**  LAST UPDATE:   11/01/10
+**  VERSION:       1.1.00 
+**  LAST UPDATE:   7/31/07
 *******************************************************************************/
 
 #ifndef EPANETMSX_H
 #define EPANETMSX_H
 
-// --- define WINDOWS
-
-#undef WINDOWS
-#ifdef _WIN32
-  #define WINDOWS
-#endif
-#ifdef __WIN32__
-  #define WINDOWS
-#endif
-
-// --- define DLLEXPORT
-
-#ifndef DLLEXPORT                                                              // ttaxon - 9/7/10
-  #ifdef WINDOWS
-    #ifdef __cplusplus
-    #define DLLEXPORT extern "C" __declspec(dllexport) __stdcall
+#ifndef DLLEXPORT
+  #ifdef _WIN32
+    #ifdef epanetmsx_EXPORTS
+      #define DLLEXPORT __declspec(dllexport) __stdcall
     #else
-    #define DLLEXPORT __declspec(dllexport) __stdcall
+      #define DLLEXPORT __declspec(dllimport) __stdcall
     #endif
+  #elif defined(__CYGWIN__)
+    #define DLLEXPORT __stdcall
   #else
-    #ifdef __cplusplus
-    #define DLLEXPORT extern "C"
-    #else
     #define DLLEXPORT
-    #endif
-  #endif  
+  #endif
+#endif
+
+// --- Declare the EPANET toolkit functions
+#if defined(__cplusplus)
+extern "C" {
 #endif
 
 // --- define MSX constants
@@ -99,5 +90,9 @@ int  DLLEXPORT MSXsetsource(int node, int species, int type, double level,
 int  DLLEXPORT MSXsetpatternvalue(int pat, int period, double value);
 int  DLLEXPORT MSXsetpattern(int pat, double mult[], int len);
 int  DLLEXPORT MSXaddpattern(char *id);
+
+  #if defined(__cplusplus)
+  }
+  #endif
 
 #endif

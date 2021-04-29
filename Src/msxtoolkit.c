@@ -9,7 +9,7 @@
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
 **  VERSION:       1.1.00
-**  LAST UPDATE:   2/8/11
+**  LAST UPDATE:   04/14/2021
 **  BUG FIXES:     BUG ID 22. MSXsetpattern, Feng Shang, 04/17/2008
 **                 File mode bug in MSXsolveH & MSXusehydfile, L. Rossman 10/05/2008
 **                 Possible unterminated string copy, L. Rossman 11/01/10
@@ -23,7 +23,6 @@
 **  detailed descriptions of the input data file formats required by both
 **  the original EPANET and its multi-species extension.
 *******************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 
 #include <stdio.h>
 #include <string.h>
@@ -159,7 +158,7 @@ int   DLLEXPORT  MSXusehydfile(char *fname)
 
 // --- open hydraulics file
 
-    //MSX.HydFile.mode = USED_FILE;                                            //(LR-10/05/08)
+    //MSX.HydFile.mode = USED_FILE;                                            //(LR-10/05/08, to fix bug ??)
     MSX.HydFile.file = fopen(fname, "rb");
     if (!MSX.HydFile.file) return ERR_OPEN_HYD_FILE;
 

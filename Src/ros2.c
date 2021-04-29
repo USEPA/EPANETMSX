@@ -5,7 +5,7 @@
 **                 ordinary differential equations.
 **  AUTHOR:        L. Rossman, US EPA - NRMRL
 **  VERSION:       1.1.00
-**  LAST UPDATE:   3/1/07
+**  LAST UPDATE:   04/14/2021
 **
 **  This code is based on material presented in:
 **    Verwer, J.G., Spee, E.J., Blom, J.G. and Hundsdorfer, W.H.,
@@ -23,14 +23,9 @@
 
 //  Local variables
 //-----------------
-static double** A;                     // Jacobian matrix
-static double*  K1;                    // Intermediate solutions
-static double*  K2;
-static double*  Ynew;                  // Updated function values
-static int*     Jindx;                 // Jacobian column indexes
-static int      Nmax;                  // Max. number of equations
-static int      Adjust;                // use adjustable step size
+MSXRosenbrock MSXRosenbrockSolver;
 
+#pragma omp threadprivate(MSXRosenbrockSolver)
 
 //=============================================================================
 
@@ -47,23 +42,32 @@ int ros2_open(int n, int adjust)
 **    1 if successful, 0 if not.
 */
 {
+    int errorcode = 1;
     int n1 = n + 1;
-    Nmax = 0;
-    Adjust = adjust;
-    K1    = NULL;
-    K2    = NULL;
-    Jindx = NULL;
-    Ynew  = NULL;
-    A     = NULL;
-    K1    = (double *) calloc(n1, sizeof(double));
-    K2    = (double *) calloc(n1, sizeof(double));
-    Jindx = (int *) calloc(n1, sizeof(int));
-    Ynew  = (double *) calloc(n1, sizeof(double));
-    A = createMatrix(n1, n1);
-    if ( !Jindx || !Ynew || !K1 || !K2) return 0;
-    if ( !A ) return 0;
-    Nmax = n;
-    return 1;
+
+#pragma omp parallel
+{
+    MSXRosenbrockSolver.Nmax = n;
+    MSXRosenbrockSolver.Adjust = adjust;
+    MSXRosenbrockSolver.K1 = NULL;
+    MSXRosenbrockSolver.K2 = NULL;
+    MSXRosenbrockSolver.Jindx = NULL;
+    MSXRosenbrockSolver.Ynew = NULL;
+    MSXRosenbrockSolver.A = NULL;
+    MSXRosenbrockSolver.K1 = (double*)calloc(n1, sizeof(double));
+    MSXRosenbrockSolver.K2 = (double*)calloc(n1, sizeof(double));
+    MSXRosenbrockSolver.Jindx = (int*)calloc(n1, sizeof(int));
+    MSXRosenbrockSolver.Ynew = (double*)calloc(n1, sizeof(double));
+    MSXRosenbrockSolver.A = createMatrix(n1, n1);
+#pragma omp critical
+    {
+        if (!MSXRosenbrockSolver.Jindx || !MSXRosenbrockSolver.Ynew ||
+            !MSXRosenbrockSolver.K1 || !MSXRosenbrockSolver.K2) errorcode = 0;
+        if (!MSXRosenbrockSolver.A) errorcode = 0;
+    }
+}
+
+    return errorcode;
 }
 
 //=============================================================================
@@ -77,12 +81,18 @@ void ros2_close()
 **    none.
 */
 {
-    if ( Jindx ) { free(Jindx); Jindx = NULL; }
-    if ( Ynew ) { free(Ynew); Ynew = NULL; }
-    if ( K1 ) { free(K1); K1 = NULL; }
-    if ( K2 ) { free(K2); K2 = NULL; }
-    freeMatrix(A);
-    A = NULL;
+
+#pragma omp parallel
+{
+
+    if (MSXRosenbrockSolver.Jindx) { free(MSXRosenbrockSolver.Jindx); MSXRosenbrockSolver.Jindx = NULL; }
+    if (MSXRosenbrockSolver.Ynew) { free(MSXRosenbrockSolver.Ynew); MSXRosenbrockSolver.Ynew = NULL; }
+    if (MSXRosenbrockSolver.K1) { free(MSXRosenbrockSolver.K1); MSXRosenbrockSolver.K1 = NULL; }
+    if (MSXRosenbrockSolver.K2) { free(MSXRosenbrockSolver.K2); MSXRosenbrockSolver.K2 = NULL; }
+    freeMatrix(MSXRosenbrockSolver.A);
+    MSXRosenbrockSolver.A = NULL;
+}
+
 }
 
 //=============================================================================
@@ -130,7 +140,7 @@ int ros2_integrate(double y[], int n, double t, double tnext,
     double ej, err, factor, facmax;
     int    nfcn, njac, naccept, nreject, j;
     int    isReject;
-	int    adjust = Adjust;
+	int    adjust = MSXRosenbrockSolver.Adjust;
 
 // --- Initialize counters, etc.
 
@@ -150,14 +160,14 @@ int ros2_integrate(double y[], int n, double t, double tnext,
     h = *htry;
     if ( h == 0.0 )
     {
-        func(t, y, n, K1);
+        func(t, y, n, MSXRosenbrockSolver.K1);
         nfcn += 1;
         adjust = 1;
         h = tnext - t;
         for (j=1; j<=n; j++)
         {
             ytol = atol[j] + rtol[j]*fabs(y[j]);
-            if (K1[j] != 0.0) h = fmin(h, (ytol/fabs(K1[j])));
+            if (MSXRosenbrockSolver.K1[j] != 0.0) h = fmin(h, (ytol/fabs(MSXRosenbrockSolver.K1[j])));
         }
     }
     h = fmax(hmin, h);
@@ -184,7 +194,7 @@ int ros2_integrate(double y[], int n, double t, double tnext,
 
         if ( isReject == 0 )
         {
-            jacobian(y, n, K1, K2, A, func);
+            jacobian(y, n, MSXRosenbrockSolver.K1, MSXRosenbrockSolver.K2, MSXRosenbrockSolver.A, func);
             njac++;
             nfcn += 2*n;
             ghinv1 = 0.0;
@@ -196,37 +206,37 @@ int ros2_integrate(double y[], int n, double t, double tnext,
         dghinv = ghinv - ghinv1;
         for (j=1; j<=n; j++)
         {
-            A[j][j] += dghinv;
+            MSXRosenbrockSolver.A[j][j] += dghinv;
         }
         ghinv1 = ghinv;
-        if ( !factorize(A, n, K1, Jindx) ) return -1;
+        if ( !factorize(MSXRosenbrockSolver.A, n, MSXRosenbrockSolver.K1, MSXRosenbrockSolver.Jindx) ) return -1;
 
     // --- Stage 1 solution
 
-        func(t, y, n, K1);
+        func(t, y, n, MSXRosenbrockSolver.K1);
         nfcn += 1;
-        for (j=1; j<=n; j++) K1[j] *= ghinv; 
-        solve(A, n, Jindx, K1);
+        for (j=1; j<=n; j++) MSXRosenbrockSolver.K1[j] *= ghinv;
+        solve(MSXRosenbrockSolver.A, n, MSXRosenbrockSolver.Jindx, MSXRosenbrockSolver.K1);
 
     // --- Stage 2 solution
 
         for (j=1; j<=n; j++)
         {
-            Ynew[j] = y[j] + h*K1[j]; 
+            MSXRosenbrockSolver.Ynew[j] = y[j] + h* MSXRosenbrockSolver.K1[j];
         }
-        func(t, Ynew, n, K2);
+        func(t, MSXRosenbrockSolver.Ynew, n, MSXRosenbrockSolver.K2);
         nfcn += 1;
         for (j=1; j<=n; j++)
         {
-            K2[j] = (K2[j] - 2.0*K1[j])*ghinv;
+            MSXRosenbrockSolver.K2[j] = (MSXRosenbrockSolver.K2[j] - 2.0* MSXRosenbrockSolver.K1[j])*ghinv;
         }
-        solve(A, n, Jindx, K2);
+        solve(MSXRosenbrockSolver.A, n, MSXRosenbrockSolver.Jindx, MSXRosenbrockSolver.K2);
 
     // --- Overall solution
 
         for (j=1; j<=n; j++)
         {
-            Ynew[j] = y[j] + 1.5*h*K1[j] + 0.5*h*K2[j]; 
+            MSXRosenbrockSolver.Ynew[j] = y[j] + 1.5*h* MSXRosenbrockSolver.K1[j] + 0.5*h* MSXRosenbrockSolver.K2[j];
         }
 
     // --- Error estimation
@@ -237,8 +247,8 @@ int ros2_integrate(double y[], int n, double t, double tnext,
         {
             for (j=1; j<=n; j++)
             {
-                ytol = atol[j] + rtol[j]*fabs(Ynew[j]);
-	            ej = fabs(Ynew[j] - y[j] - h*K1[j])/ytol;
+                ytol = atol[j] + rtol[j]*fabs(MSXRosenbrockSolver.Ynew[j]);
+	            ej = fabs(MSXRosenbrockSolver.Ynew[j] - y[j] - h* MSXRosenbrockSolver.K1[j])/ytol;
                 err = err + ej*ej; 
             }
             err = sqrt(err/n);
@@ -268,7 +278,7 @@ int ros2_integrate(double y[], int n, double t, double tnext,
             isReject = 0;
             for (j=1; j<=n; j++)
             {
-                y[j] = Ynew[j];
+                y[j] = MSXRosenbrockSolver.Ynew[j];
                 if ( y[j] <= UROUND ) y[j] = 0.0;
             }
             if ( adjust ) *htry = h;

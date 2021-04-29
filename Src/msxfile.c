@@ -8,7 +8,7 @@
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
 **  VERSION:       1.1.00
-**  LAST UPDATE:   09/12/08
+**  LAST UPDATE:   04/14/2021
 **  BUG FIX:       Bug ID 10, Feng Shang, 01/08/2008
 				   
 				   In funtcion saveSources, MSX.Pattern[source->pat].id rather 
@@ -17,7 +17,6 @@
 				   BUG ID 53, check if the source type > -1 before saving. 
 				   FS 09/23/08 
 *******************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 
 #include <stdio.h>
 #include <string.h>

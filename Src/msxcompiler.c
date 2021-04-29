@@ -6,9 +6,8 @@
 **                 All Rights Reserved. See license information in LICENSE.TXT.
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **  VERSION:       1.1.00
-**  LAST UPDATE:   11/01/10
+**  LAST UPDATE:   04/14/2021
 *******************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -46,6 +45,7 @@ extern MSXproject  MSX;       // MSX project data
 //  Imported functions
 //--------------------
 char * MSXchem_getVariableStr(int i, char *s);
+//void   MSXrpt_writeLine(char *line);
 
 //  Exported functions
 //--------------------
@@ -83,21 +83,21 @@ int MSXcompiler_open()
 // --- get the name of a temporary file with directory path stripped from it
 //     and replace any '.' characters in it (for the Borland compiler to work)
 
-    Fname = MSXutils_getTempName(TempName) ;
+        Fname = MSXutils_getTempName(TempName) ;
 
 // --- assign names to source code and compiled files
 
-    strcpy(srcFile, Fname);
-    strcat(srcFile, ".c");
-    strcpy(objFile, Fname);
-    strcat(objFile, ".o");
+        strcpy(srcFile, Fname);
+        strcat(srcFile, ".c");
+        strcpy(objFile, Fname);
+        strcat(objFile, ".o");
 #ifdef WINDOWS
-    strcpy(libFile, Fname);
-    strcat(libFile, ".dll");
+        strcpy(libFile, Fname);
+        strcat(libFile, ".dll");
 #else
-    strcpy(libFile, "lib");
-    strcat(libFile, Fname);
-    strcat(libFile, ".so");
+        strcpy(libFile, "lib");
+        strcat(libFile, Fname);
+        strcat(libFile, ".so");
 #endif
 
 // --- write the chemistry functions to the source code file
@@ -110,45 +110,45 @@ int MSXcompiler_open()
 // --- compile the source code file to a dynamic link library file
 
 #ifdef WINDOWS
-    if ( MSX.Compiler == VC )
-    {
-	sprintf(cmd, "CL /O2 /LD /nologo %s", srcFile);
-        err = MSXfuncs_run(cmd);
-    }
+        if ( MSX.Compiler == VC )
+        {            
+            sprintf(cmd, "runvc.bat %s", srcFile);
+            err = MSXfuncs_run(cmd);
+        }
 
-    else if ( MSX.Compiler == GC )
-    {
-	sprintf(cmd, "gcc -c -O3 %s", srcFile);
-	err = MSXfuncs_run(cmd);
-	sprintf(cmd, "gcc -lm -shared -o %s %s", libFile, objFile);
-	err = MSXfuncs_run(cmd);
-    }
-    else return ERR_COMPILE_FAILED;
+        else if ( MSX.Compiler == GC )
+        {
+    	    sprintf(cmd, "gcc -c -O3 %s", srcFile);
+	        err = MSXfuncs_run(cmd);
+	        sprintf(cmd, "gcc -lm -shared -o %s %s", libFile, objFile);
+    	    err = MSXfuncs_run(cmd);
+        }
+        else return ERR_COMPILE_FAILED;
 #else
-    if ( MSX.Compiler == GC )
-    {
-        sprintf(cmd, "gcc -c -fPIC -O3 %s", srcFile);
-        err = system(cmd);
-        sprintf(cmd, "gcc -lm -shared -o %s %s", libFile, objFile);
-        err = system(cmd);
-    }
-    else return ERR_COMPILE_FAILED;
+        if ( wiMSX.Compiler == GC )
+        {
+            sprintf(cmd, "gcc -c -fPIC -O3 %s", srcFile);
+            err = system(cmd);
+            sprintf(cmd, "gcc -lm -shared -o %s %s", libFile, objFile);
+            err = system(cmd);
+        }
+        else return ERR_COMPILE_FAILED;
 #endif
     Compiled = (err == 0);                                                     // ttaxon - 9/7/10
 
 // --- load the compiled chemistry functions from the library file
 
-    if ( Compiled)                                                             // ttaxon - 9/7/10
-    {
-        err = MSXfuncs_load(libFile);
-        if ( err == 1 ) return ERR_COMPILE_FAILED;
-        if ( err == 2 ) return ERR_COMPILED_LOAD;
-    }
-    else                                                                       // ttaxon - 9/7/10   
-    {
-        MSXcompiler_close(); 
-        return ERR_COMPILE_FAILED; 
-    } 
+	if(Compiled)
+	{
+		err = MSXfuncs_load(libFile);
+	    if ( err == 1 ) return ERR_COMPILE_FAILED;
+		if ( err == 2 ) return ERR_COMPILED_LOAD;
+	} 
+	else 
+	{
+		MSXcompiler_close();
+		return ERR_COMPILE_FAILED;
+	}
     return 0;
 }
 
@@ -184,7 +184,6 @@ void MSXcompiler_close()
 #endif
     }
 }
-
 //=============================================================================
 
 void  writeSrcFile(FILE* f)

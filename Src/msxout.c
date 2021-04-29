@@ -9,9 +9,8 @@
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
 **  VERSION:       1.1.00
-**  LAST UPDATE:   7/31/07
+**  LAST UPDATE:   04/14/2021
 ******************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 
 #include <stdio.h>
 #include <string.h>
@@ -159,7 +158,6 @@ int MSXout_saveResults()
 {
     int   m, j;
     REAL4 x;
-
     for (m=1; m<=MSX.Nobjects[SPECIES]; m++)
     {
         for (j=1; j<=MSX.Nobjects[NODE]; j++)

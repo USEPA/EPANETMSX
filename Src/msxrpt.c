@@ -9,10 +9,9 @@
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
 **  VERSION:       1.1.00
-**  LAST UPDATE:   2/8/11
+**  LAST UPDATE:   04/14/2021
 **  BUG FIX: Bug ID 08 Feng Shang 01/07/08
 ******************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 
 #include <stdio.h>
 #include <string.h>
@@ -82,6 +81,8 @@ static void  getHrsMins(int k, int *hrs, int *mins);
 static void  newPage(void);
 static void  writeLine(char *line);
 
+static void writemassbalance();
+
 //=============================================================================
 
 int  MSXrpt_write()
@@ -111,6 +112,9 @@ int  MSXrpt_write()
 
     if ( MSX.Statflag == SERIES ) createSeriesTables();
     else createStatsTables();
+
+    writemassbalance();
+
     writeLine("");
     return 0;
 }
@@ -343,3 +347,55 @@ void  writeLine(char *line)
     else ENwriteline(line);
     LineNum++;
 }
+
+
+void writemassbalance()
+/*
+**-------------------------------------------------------------
+**   Input:   none
+**   Output:  none
+**   Purpose: writes water quality mass balance ratio
+**            (Outflow + Final Storage) / Inflow + Initial Storage)
+**            to report file.
+**-------------------------------------------------------------
+*/
+{
+
+    char s1[MAXMSG + 1];
+    int  kunits = 0;
+
+    for (int m = 1; m <= MSX.Nobjects[SPECIES]; m++)
+    {
+        if (MSX.Species[m].pipeExprType != RATE)
+            continue;
+        
+        snprintf(s1, MAXMSG, "\n");
+
+        snprintf(s1, MAXMSG, "Water Quality Mass Balance: %s (%s)", MSX.Species[m].id, MSX.Species[m].units);
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "================================");
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "Initial Mass:      %12.5e", MSX.MassBalance.initial[m]);
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "Mass Inflow:       %12.5e", MSX.MassBalance.inflow[m]);
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "Mass Outflow:      %12.5e", MSX.MassBalance.outflow[m]);
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "Mass Reacted:      %12.5e", MSX.MassBalance.reacted[m]);
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "Final Mass:        %12.5e", MSX.MassBalance.final[m]);
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "Mass Ratio:         %-.5f", MSX.MassBalance.ratio[m]);
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "================================\n");
+        writeLine(s1);
+    }
+}
+
+
+
+
+
+
+
+

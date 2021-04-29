@@ -8,8 +8,17 @@
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
 **  VERSION:       1.1.00
-**  LAST UPDATE:   3/1/07
+**  LAST UPDATE:   04/14/2021
 ******************************************************************************/
+
+typedef struct
+{
+    int      Nmax;          // max. number of equations
+    int* Indx;         // permutation vector of row indexes     
+    double* F;            // function & adjustment vector
+    double* W;            // work vector
+    double** J;           // Jacobian matrix
+}MSXNewton;
 
 // Opens the equation solver system
 int  newton_open(int n);

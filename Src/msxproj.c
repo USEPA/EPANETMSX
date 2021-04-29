@@ -9,11 +9,10 @@
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
 **  VERSION:       1.1.00
-**  LAST UPDATE:   2/8/11
+**  LAST UPDATE:   04/14/2021
 **  Bug fix:       Bug ID 08, Feng Shang 01/07/2008
 **                 Memory leak fixed, T. Taxon - 9/7/10
 ******************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 
 #include <stdio.h>
 #include <string.h>
@@ -22,7 +21,7 @@
 
 #include "msxtypes.h"
 #include "msxutils.h"
-#include "mempool.h"
+//#include "mempool.h"
 #include "hash.h"
 
 //  Exported variables
@@ -88,6 +87,10 @@ static void   deleteHashTables(void);
 
 static int    openRptFile(void);                                               //(LR-11/20/07)
 
+static int  buildadjlists();
+static void freeadjlists();
+
+
 //=============================================================================
 
 int  MSXproj_open(char *fname)
@@ -129,12 +132,22 @@ int  MSXproj_open(char *fname)
     CALL(errcode, MSXinp_readNetData());
     CALL(errcode, MSXinp_readMsxData());
 
-    if (strcmp(MSX.RptFile.name, ""))                                          //(FS-01/07/2008, to fix bug 08)
+    if (strcmp(MSX.RptFile.name, ""))                                              //(FS-01/07/2008, to fix bug 08)
 	CALL(errcode, openRptFile());                                              //(LR-11/20/07, to fix bug 08)
 
 // --- convert user's units to internal units
 
     CALL(errcode, convertUnits());
+
+
+
+    // Build nodal adjacency lists 
+    if (errcode == 0 && MSX.Adjlist == NULL)
+    {
+        errcode = buildadjlists();
+        if (errcode) return errcode;
+    }
+
 
 // --- close input file
 
@@ -459,6 +472,8 @@ int createObjects()
     {
         MSX.Link[i].c0 = (double *)
             calloc(MSX.Nobjects[SPECIES]+1, sizeof(double));
+        MSX.Link[i].reacted = (double *)
+            calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
         MSX.Link[i].param = (double *)
             calloc(MSX.Nobjects[PARAMETER]+1, sizeof(double));
         MSX.Link[i].rpt = 0;
@@ -472,6 +487,8 @@ int createObjects()
             calloc(MSX.Nobjects[PARAMETER]+1, sizeof(double));
         MSX.Tank[i].c = (double *)
             calloc(MSX.Nobjects[SPECIES]+1, sizeof(double));
+        MSX.Tank[i].reacted = (double*)
+            calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
     }
 
 // --- initialize contents of each time pattern object
@@ -514,7 +531,6 @@ void deleteObjects()
 {
     int i;
     SnumList *listItem;
-    Psource  source;                                                           //ttaxon - 9/7/10
 
 // --- free memory used by nodes, links, and tanks
 
@@ -522,34 +538,31 @@ void deleteObjects()
     {
         FREE(MSX.Node[i].c);
         FREE(MSX.Node[i].c0);
-
-        // --- free memory used by water quality sources                       //ttaxon - 9/7/10
-
-	if(MSX.Node[i].sources)
-	{ 
-            source = MSX.Node[i].sources; 
-            while (source != NULL)
-	    { 
-                MSX.Node[i].sources = source->next; 
-                FREE(source); 
-                source = MSX.Node[i].sources; 
-            } 
-        }
-
+		if(MSX.Node[i].sources) 
+		{
+			struct Ssource *p=MSX.Node[i].sources;
+			while(p != NULL) 
+			{
+				MSX.Node[i].sources=p->next;
+				FREE(p);
+				p=MSX.Node[i].sources;
+			}
+		}
     }
     if (MSX.Link) for (i=1; i<=MSX.Nobjects[LINK]; i++)
     {
         FREE(MSX.Link[i].c0);
         FREE(MSX.Link[i].param);
+        FREE(MSX.Link[i].reacted);
     }
     if (MSX.Tank) for (i=1; i<=MSX.Nobjects[TANK]; i++)
     {
         FREE(MSX.Tank[i].param);
         FREE(MSX.Tank[i].c);
+        FREE(MSX.Tank[i].reacted);
     }
 
 // --- free memory used by time patterns
-
     if (MSX.Pattern) for (i=1; i<=MSX.Nobjects[PATTERN]; i++)
     {
         listItem = MSX.Pattern[i].first;
@@ -669,4 +682,83 @@ int openRptFile()
     if ( MSX.RptFile.file == NULL ) return ERR_OPEN_RPT_FILE;
     return 0;
 }
-    
+
+int  buildadjlists()   //from epanet2.2 for node sorting in WQ routing
+/*
+**--------------------------------------------------------------
+** Input:   none
+** Output:  returns error code
+** Purpose: builds linked list of links adjacent to each node
+**--------------------------------------------------------------
+*/
+{
+    int       i, j, k;
+    int       errcode = 0;
+    Padjlist  alink;
+
+    // Create an array of adjacency lists
+    freeadjlists();
+    MSX.Adjlist = (Padjlist*)calloc(MSX.Nobjects[NODE]+1, sizeof(Padjlist));
+    if (MSX.Adjlist == NULL) return 101;
+    for (i = 0; i <= MSX.Nobjects[NODE]; i++) 
+        MSX.Adjlist[i] = NULL;
+
+    // For each link, update adjacency lists of its end nodes
+    for (k = 1; k <= MSX.Nobjects[LINK]; k++)
+    {
+        i = MSX.Link[k].n1;
+        j = MSX.Link[k].n2;
+
+        // Include link in start node i's list
+        alink = (struct Sadjlist*) malloc(sizeof(struct Sadjlist));
+        if (alink == NULL)
+        {
+            errcode = 101;
+            break;
+        }
+        alink->node = j;
+        alink->link = k;
+        alink->next = MSX.Adjlist[i];
+        MSX.Adjlist[i] = alink;
+
+        // Include link in end node j's list
+        alink = (struct Sadjlist*) malloc(sizeof(struct Sadjlist));
+        if (alink == NULL)
+        {
+            errcode = 101;
+            break;
+        }
+        alink->node = i;
+        alink->link = k;
+        alink->next = MSX.Adjlist[j];
+        MSX.Adjlist[j] = alink;
+    }
+    if (errcode) freeadjlists();
+    return errcode;
+}
+
+
+void  freeadjlists()            //from epanet2.2 for node sorting in WQ routing
+/*
+**--------------------------------------------------------------
+** Input:   none
+** Output:  none
+** Purpose: frees memory used for nodal adjacency lists
+**--------------------------------------------------------------
+*/
+{
+    int   i;
+    Padjlist alink;
+
+    if (MSX.Adjlist == NULL) return;
+    for (i = 0; i <= MSX.Nobjects[NODE]; i++)
+    {
+        for (alink = MSX.Adjlist[i]; alink != NULL; alink = MSX.Adjlist[i])
+        {
+            MSX.Adjlist[i] = alink->next;
+            free(alink);
+        }
+    }
+    free(MSX.Adjlist);
+}
+
