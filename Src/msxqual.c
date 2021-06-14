@@ -636,6 +636,11 @@ int  getHydVars()
     n = MSX.Nobjects[LINK];
     if (fread(MSX.Q+1, sizeof(REAL4), n, MSX.HydFile.file) < (unsigned)n)
         return ERR_READ_HYD_FILE;
+    
+    for (int pi = 1; pi <= n; pi++)    //06/10/2021 Shang
+        if (fabs(MSX.Q[pi]) < Q_STAGNANT)
+            MSX.Q[pi] = 0.0;
+
 
 // --- skip over link status and settings
 
@@ -1092,7 +1097,7 @@ void sourceInput(int n, double volout, long dt)
     // --- compute a new chemical equilibrium at the source node
     MSXchem_equil(NODE, MSX.Node[n].c);
  
-    for (m = 1; m <= MSX.Nobjects[m]; m++)
+    for (m = 1; m <= MSX.Nobjects[SPECIES]; m++)   // m to SPECIES bug fix 06/10/2021
     {
         MSX.MassBalance.inflow[m] += MSX.SourceIn[m] * LperFT3;
     }
