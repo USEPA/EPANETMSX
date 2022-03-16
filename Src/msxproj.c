@@ -23,6 +23,7 @@
 #include "msxutils.h"
 //#include "mempool.h"
 #include "hash.h"
+#include "smatrix.h"
 
 //  Exported variables
 //--------------------
@@ -127,6 +128,7 @@ int  MSXproj_open(char *fname)
     CALL(errcode, MSXinp_countNetObjects());
     CALL(errcode, createObjects());
 
+    MSX.Dispersion = 0;   //no dispersion by default, unless yes in msx file
 // --- read in the EPANET and MSX object data
 
     CALL(errcode, MSXinp_readNetData());
@@ -139,12 +141,13 @@ int  MSXproj_open(char *fname)
 
     CALL(errcode, convertUnits());
 
-
+    if (MSX.Dispersion != 0)
+        createsparse();   //symmetric matrix
 
     // Build nodal adjacency lists 
     if (errcode == 0 && MSX.Adjlist == NULL)
     {
-        errcode = buildadjlists();
+        errcode = buildadjlists();   //buildadjlists is 2.2, parallel links are included
         if (errcode) return errcode;
     }
 
@@ -562,7 +565,9 @@ void deleteObjects()
         FREE(MSX.Tank[i].reacted);
     }
 
-// --- free memory used by time patterns
+    freeadjlists();
+
+    // --- free memory used by time patterns
     if (MSX.Pattern) for (i=1; i<=MSX.Nobjects[PATTERN]; i++)
     {
         listItem = MSX.Pattern[i].first;
@@ -760,5 +765,6 @@ void  freeadjlists()            //from epanet2.2 for node sorting in WQ routing
         }
     }
     free(MSX.Adjlist);
+    MSX.Adjlist = NULL;
 }
 

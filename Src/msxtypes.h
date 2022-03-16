@@ -490,8 +490,26 @@ typedef struct                         // MSX PROJECT VARIABLES
    SmassBalance MassBalance;
    alloc_handle_t* QualPool;       // memory pool
 
+   int Dispersion;   //1 if dispersion modeling
+
    double* MassIn;        // mass inflow of each species to each node
    double* SourceIn;      // external mass inflow of each species from WQ source;
    int* SortedNodes;
+
+   int* Order;          // Node-to-row of re-ordered matrix
+   int* Row;            // Row-to-node of re-ordered matrix
+   int* Ndx;            // Index of link's coeff. in Aij
+   int* XLNZ;           // Start position of each column in NZSUB
+   int* NZSUB;          // Row index of each coeff.in each column
+   int* LNZ;            // Position of each coeff. in Aij array
+   int* Degree;         // Number of links adjacent to each node
+   int Ncoeffs;         // Number of non-zero matrix coeffs
+
+   int* link;           // Array used by linear eqn. solver
+   int* first;          // Array used by linear eqn. solver
+   double* temp;        // Array used by linear eqn. solver
+   double* Aii;         // Diagonal matrix coeffs.
+   double* Aij;         // Non-zero, off-diagonal matrix coeffs.
+   double* F;           // Right hand side vector
 
 } MSXproject;
