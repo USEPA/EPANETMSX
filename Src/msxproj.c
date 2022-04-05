@@ -24,7 +24,7 @@
 //#include "mempool.h"
 #include "hash.h"
 #include "smatrix.h"
-
+#include "epanet2.h"
 //  Exported variables
 //--------------------
 MSXproject  MSX;                            // MSX project data
@@ -128,7 +128,7 @@ int  MSXproj_open(char *fname)
     CALL(errcode, MSXinp_countNetObjects());
     CALL(errcode, createObjects());
 
-    MSX.Dispersion = 0;   //no dispersion by default, unless yes in msx file
+    MSX.DispersionFlag = 0;   //no dispersion by default, unless yes in msx file
 // --- read in the EPANET and MSX object data
 
     CALL(errcode, MSXinp_readNetData());
@@ -141,9 +141,14 @@ int  MSXproj_open(char *fname)
 
     CALL(errcode, convertUnits());
 
-    if (MSX.Dispersion != 0)
-        createsparse();   //symmetric matrix
+    if (MSX.DispersionFlag != 0)
+    {
+        float relvis;
+        ENgetoption(13, &relvis);
+        MSX.Dispersion.viscosity = relvis * 1.1E-5;
 
+        createsparse();   //symmetric matrix
+    }
     // Build nodal adjacency lists 
     if (errcode == 0 && MSX.Adjlist == NULL)
     {
@@ -332,6 +337,7 @@ void setDefaults()
     MSX.D = NULL;
     MSX.Q = NULL;
     MSX.H = NULL;
+    MSX.S = NULL;
     MSX.Species = NULL;
     MSX.Term = NULL;
     MSX.Const = NULL;
@@ -458,6 +464,7 @@ int createObjects()
     MSX.D = (float *) calloc(MSX.Nobjects[NODE]+1, sizeof(float));
     MSX.H = (float *) calloc(MSX.Nobjects[NODE]+1, sizeof(float));
     MSX.Q = (float *) calloc(MSX.Nobjects[LINK]+1, sizeof(float));
+    MSX.S = (float *) calloc(MSX.Nobjects[LINK] + 1, sizeof(float));
 
 // --- create arrays for current & initial concen. of each species for each node
 
@@ -518,6 +525,19 @@ int createObjects()
 // --- initialize math expressions for each intermediate term
 
     for (i=1; i<=MSX.Nobjects[TERM]; i++) MSX.Term[i].expr = NULL;
+
+    MSX.Dispersion.MaxSegments = 10000;
+    MSX.Dispersion.DIFFUS = 1.29E-8;
+    MSX.Dispersion.md = (double*)
+        calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
+    MSX.Dispersion.ld = (double*)
+        calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
+
+    for (int m = 1; m <= MSX.Nobjects[SPECIES]; m++)
+    {
+        MSX.Dispersion.md[m] = -1.0;
+        MSX.Dispersion.ld[m] = -1.0;
+    }
     return 0;
 }
 
@@ -585,6 +605,7 @@ void deleteObjects()
     FREE(MSX.D);
     FREE(MSX.H);
     FREE(MSX.Q);
+    FREE(MSX.S);
     FREE(MSX.C0);
 
 // --- delete all nodes, links, and tanks

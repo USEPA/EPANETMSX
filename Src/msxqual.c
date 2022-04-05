@@ -149,6 +149,7 @@ int  MSXqual_open()
    
     MSX.MassBalance.initial = (double*)calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
     MSX.MassBalance.inflow =  (double*)calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
+    MSX.MassBalance.indisperse = (double*)calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
     MSX.MassBalance.outflow = (double*)calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
     MSX.MassBalance.reacted = (double*)calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
     MSX.MassBalance.final   = (double*)calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
@@ -188,6 +189,7 @@ int  MSXqual_open()
     CALL(errcode, MEMCHECK(MSX.SortedNodes));
     CALL(errcode, MEMCHECK(MSX.MassBalance.initial));
     CALL(errcode, MEMCHECK(MSX.MassBalance.inflow));
+    CALL(errcode, MEMCHECK(MSX.MassBalance.indisperse));
     CALL(errcode, MEMCHECK(MSX.MassBalance.outflow));
     CALL(errcode, MEMCHECK(MSX.MassBalance.reacted));
     CALL(errcode, MEMCHECK(MSX.MassBalance.final));
@@ -294,6 +296,7 @@ int  MSXqual_init()
         MSX.MassBalance.initial[m] = 0.0;
         MSX.MassBalance.final[m] = 0.0;
         MSX.MassBalance.inflow[m] = 0.0;
+        MSX.MassBalance.indisperse[m] = 0.0;
         MSX.MassBalance.outflow[m] = 0.0;
         MSX.MassBalance.reacted[m] = 0.0;
         MSX.MassBalance.ratio[m] = 0.0;
@@ -421,7 +424,7 @@ int MSXqual_step(long *t, long *tleft)
                 sreacted += MSX.Tank[k].reacted[m];
 
             MSX.MassBalance.reacted[m] = sreacted;
-            smassin = MSX.MassBalance.initial[m] + MSX.MassBalance.inflow[m];
+            smassin = MSX.MassBalance.initial[m] + MSX.MassBalance.inflow[m]+MSX.MassBalance.indisperse[m];
             smassout = MSX.MassBalance.outflow[m] + MSX.MassBalance.final[m];
             if (sreacted < 0)  //loss
                 smassout -= sreacted;
@@ -444,7 +447,7 @@ int MSXqual_step(long *t, long *tleft)
                 sreacted += MSX.Tank[k].reacted[m];
 
             MSX.MassBalance.reacted[m] = sreacted;
-            smassin = MSX.MassBalance.initial[m] + MSX.MassBalance.inflow[m];
+            smassin = MSX.MassBalance.initial[m] + MSX.MassBalance.inflow[m] + MSX.MassBalance.indisperse[m];
             smassout = MSX.MassBalance.outflow[m]+MSX.MassBalance.final[m];
             if (sreacted < 0)  //loss
                 smassout -= sreacted;
@@ -565,6 +568,7 @@ int MSXqual_close()
     }
     FREE(MSX.MassBalance.initial);
     FREE(MSX.MassBalance.inflow);
+    FREE(MSX.MassBalance.indisperse);
     FREE(MSX.MassBalance.outflow);
     FREE(MSX.MassBalance.reacted);
     FREE(MSX.MassBalance.final);
@@ -636,15 +640,16 @@ int  getHydVars()
     n = MSX.Nobjects[LINK];
     if (fread(MSX.Q+1, sizeof(REAL4), n, MSX.HydFile.file) < (unsigned)n)
         return ERR_READ_HYD_FILE;
+    if (fread(MSX.S + 1, sizeof(REAL4), n, MSX.HydFile.file) < (unsigned)n) //03/17/2022
+        return ERR_READ_HYD_FILE;
     
     for (int pi = 1; pi <= n; pi++)    //06/10/2021 Shang
         if (fabs(MSX.Q[pi]) < Q_STAGNANT)
             MSX.Q[pi] = 0.0;
 
+// --- skip over link settings
 
-// --- skip over link status and settings
-
-    fseek(MSX.HydFile.file, 2*n*sizeof(REAL4), SEEK_CUR);
+    fseek(MSX.HydFile.file, 1*n*sizeof(REAL4), SEEK_CUR);
 
 // --- read time step until next hydraulic event
 
@@ -765,7 +770,9 @@ void  initSegs()
 
         MSXchem_equil(LINK, MSX.C1);
         v = LINKVOL(k);
-        if ( v > 0.0 ) MSXqual_addSeg(k, MSXqual_getFreeSeg(v, MSX.C1));
+        if ( v > 0.0 )
+            for (int ns = 0; ns < 100; ns++)
+                MSXqual_addSeg(k, MSXqual_getFreeSeg(v/100.0, MSX.C1));
     }
 
 // --- initialize segments in tanks
@@ -1242,7 +1249,7 @@ void  removeAllSegs(int k)
 void topological_transport(long dt)
 {
     int j, n, k, m;
-    double volin, volout; 
+    double volin, volout;
     Padjlist  alink;
 
 
@@ -1302,9 +1309,22 @@ void topological_transport(long dt)
                 evalnodeoutflow(k, MSX.Node[n].c, dt);
             }
         }
-        
-    }
 
+    }
+    /*Advection-Reaction Done, Dispersion Starts*/
+    //1. Green functions of each pipe
+    //2. Compose the nodal 
+    //3. Solve the matrix to update nodal concentration
+    //4. Update segment concentration
+    for (int m = 1; m <= MSX.Nobjects[SPECIES]; m++)
+    {
+        if (MSX.Dispersion.md[m] > 0 || MSX.Dispersion.ld[m] > 0)
+        {
+            dispersion_pipe(m, dt);
+            solve_nodequal(m, dt);
+            segqual_update(m, dt);
+        }
+    }
 }
 
 

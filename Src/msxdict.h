@@ -19,7 +19,7 @@
 static char *MsxSectWords[] = {"[TITLE", "[SPECIE",  "[COEFF",  "[TERM",
                                "[PIPE",  "[TANK",    "[SOURCE", "[QUALITY",
                                "[PARAM", "[PATTERN", "[OPTION", 
-                               "[REPORT", NULL};
+                               "[REPORT", "[DISPER", NULL};
 static char *ReportWords[]  = {"NODE", "LINK", "SPECIE", "FILE", "PAGESIZE", NULL};
 static char *OptionTypeWords[] = {"AREA_UNITS", "RATE_UNITS", "SOLVER", "COUPLING",
                                   "TIMESTEP", "RTOL", "ATOL", "COMPILER", NULL};  //1.1.00

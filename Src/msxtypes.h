@@ -231,7 +231,9 @@ typedef  float REAL4;
                   s_PARAMETER,
                   s_PATTERN,
                   s_OPTION,
-                  s_REPORT};
+                  s_REPORT,
+                  s_Disper,
+ };
 
  enum ErrorCodeType                    // Error codes (501-525)
           {ERR_FIRST = 500,
@@ -316,6 +318,7 @@ typedef struct                         // LINK OBJECT
    double *reacted;
    double *param;                      // kinetic parameter values
    double roughness;		       // roughness  /*Feng Shang, Bug ID 8,  01/29/2008*/
+   double areasquare;
 }  Slink;
 
 
@@ -342,6 +345,7 @@ struct Sseg                            // PIPE SEGMENT OBJECT
     double    * lastc;                 // species concentrations of previous step 
     struct    Sseg *prev;              // ptr. to previous segment
     struct    Sseg *next;              // ptr. to next segment
+    double   hresponse, uresponse, dresponse;   //for dispersion response of initial, upstream and downstream condition
 };
 typedef struct Sseg *Pseg;
 
@@ -413,11 +417,56 @@ typedef struct                 // Mass Balance Components
 {
     double   * initial;         // initial mass in system
     double   * inflow;          // mass inflow to system
+    double   * indisperse;      // mass dispersed into the system
     double   * outflow;         // mass outflow from system
     double   * reacted;         // mass reacted in system
     double   * final;           // final mass in system
     double   * ratio;           // ratio of mass added to mass lost
 } SmassBalance;
+
+
+typedef struct
+{
+    int   MaxSegments;                  //maximum number of segments in a link  
+    double viscosity;
+    double DIFFUS;                      // Diffusivity of chlorine 1.3E-8  @ 20 deg C (sq ft/sec)                                     
+         
+    int* Order;          // Node-to-row of re-ordered matrix
+    int* Row;            // Row-to-node of re-ordered matrix
+    int* Ndx;            // Index of link's coeff. in Aij
+    int* XLNZ;           // Start position of each column in NZSUB
+    int* NZSUB;          // Row index of each coeff.in each column
+    int* LNZ;            // Position of each coeff. in Aij array
+    int* Degree;         // Number of links adjacent to each node
+    int Ncoeffs;         // Number of non-zero matrix coeffs
+
+    int* link;           // Array used by linear eqn. solver
+    int* first;          // Array used by linear eqn. solver
+    double* temp;        // Array used by linear eqn. solver
+    double* Aii;         // Diagonal matrix coeffs.
+    double* Aij;         // Non-zero, off-diagonal matrix coeffs.
+    double* F;           // Right hand side vector
+    
+    Padjlist* Adjlist;                   // Node adjacency lists
+    
+    double* al;                         //vector helping solve tridaigonal system of eqns.
+    double* bl;                         //vector helping solve tridaigonal system of eqns.
+    double* cl;                         //vector helping solve tridaigonal system of eqns.
+    double* rl;                         //vector helping solve tridaigonal system of eqns.
+    double* sol;                        //vector helping solve tridaigonal system of eqns.
+    double* md;                         //molecular diffusion
+    double* ld;                         //fixed longitudinal dispersion coefficient
+    double* gam;
+    double* nodeQualUpdateNum;			//for dispersion new nodal quality update 
+    double* nodeQualUpdateDenom;		//for dispersion new nodal quality update
+    double* pipeDispersionCoeff;        //effective longitudinal dispersion coefficient	 
+}Sdispersion;
+
+
+
+
+
+
 
 typedef struct                         // MSX PROJECT VARIABLES
 {
@@ -460,7 +509,8 @@ typedef struct                         // MSX PROJECT VARIABLES
 
    REAL4  *D,                          // Node demands
           *H,                          // Node heads
-          *Q;                          // Link flows
+          *Q,                          // Link flows
+          *S;                          // Link status   
 
    double Ucf[MAX_UNIT_TYPES],         // Unit conversion factors
           DefRtol,                     // Default relative error tolerance
@@ -490,26 +540,15 @@ typedef struct                         // MSX PROJECT VARIABLES
    SmassBalance MassBalance;
    alloc_handle_t* QualPool;       // memory pool
 
-   int Dispersion;   //1 if dispersion modeling
+   int DispersionFlag;   //1 if dispersion modeling
 
    double* MassIn;        // mass inflow of each species to each node
    double* SourceIn;      // external mass inflow of each species from WQ source;
    int* SortedNodes;
 
-   int* Order;          // Node-to-row of re-ordered matrix
-   int* Row;            // Row-to-node of re-ordered matrix
-   int* Ndx;            // Index of link's coeff. in Aij
-   int* XLNZ;           // Start position of each column in NZSUB
-   int* NZSUB;          // Row index of each coeff.in each column
-   int* LNZ;            // Position of each coeff. in Aij array
-   int* Degree;         // Number of links adjacent to each node
-   int Ncoeffs;         // Number of non-zero matrix coeffs
-
-   int* link;           // Array used by linear eqn. solver
-   int* first;          // Array used by linear eqn. solver
-   double* temp;        // Array used by linear eqn. solver
-   double* Aii;         // Diagonal matrix coeffs.
-   double* Aij;         // Non-zero, off-diagonal matrix coeffs.
-   double* F;           // Right hand side vector
+  
+   Sdispersion Dispersion;
 
 } MSXproject;
+
+

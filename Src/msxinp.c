@@ -160,6 +160,7 @@ int MSXinp_countMsxObjects()
         if ( sect == s_TERM )    errcode = addTerm(tok);
         if ( sect == s_PATTERN ) errcode = addPattern(tok);
 
+
     // --- report any error found
 
         if ( errcode )
@@ -628,6 +629,9 @@ int parseLine(int sect, char *line)
 
       case s_REPORT:
         return parseReport();
+
+      case s_Disper:
+          return parseDispers();
     }
     return 0;
 }
@@ -1264,6 +1268,53 @@ int parseReport()
         if ( !MSXutils_getInt(Tok[1], &MSX.PageSize) ) return ERR_NUMBER;
         break;
     }
+    return 0;
+}
+
+int parseDispers()
+/*
+**  Purpose:
+**    parses an input line containing molecular diffusivity data.
+**
+**  Input:
+**    none
+**
+**  Returns:
+**    an error code (0 if no error)
+*/
+{
+    int err, i, j, k, m;
+    double  x;
+    Psource source;
+
+    // --- get source type
+
+    if (Ntokens < 2) return ERR_ITEMS;
+    //  --- get species index
+
+    m = MSXproj_findObject(SPECIES, Tok[0]);
+    if (m <= 0) return ERR_NAME;
+
+    // --- check that species is a BULK species
+
+    if (MSX.Species[m].type != BULK) return 0;
+
+    // --- get base strength
+
+    if (!MSXutils_getDouble(Tok[1], &x)) return ERR_NUMBER;
+    if (x < 0) return ERR_NUMBER;
+
+    if (Ntokens > 2 &&MSXutils_match(Tok[2], "FIXED"))
+    {
+        x = x * MSX.Dispersion.DIFFUS;
+        MSX.Dispersion.ld[m] = x;     
+    }
+    else
+    {
+        x = x * MSX.Dispersion.DIFFUS;
+        MSX.Dispersion.md[m] = x;
+    }
+    MSX.DispersionFlag = 1;
     return 0;
 }
 

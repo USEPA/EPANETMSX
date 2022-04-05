@@ -2,9 +2,9 @@
 *******************************************************************
 Modified from:
 
-SMATRIX.C -- Sparse matrix routines for EPANET program.      
+SMATRIX.C -- Sparse matrix routines for EPANET program, VERSION:    2.00.      
                                                                    
-VERSION:    2.00
+
 DATE:       5/8/00
 AUTHOR:     L. Rossman
             US EPA - NRMRL
@@ -78,7 +78,7 @@ int  createsparse()
    /* Re-order nodes to minimize number of non-zero coeffs.    */
    /* in factorized solution matrix. At same time, adjacency   */
    /* list is updated with links representing non-zero coeffs. */
-   MSX.Ncoeffs = MSX.Nobjects[LINK];
+   MSX.Dispersion.Ncoeffs = MSX.Nobjects[LINK];
    ERRCODE(reordernodes());
 
    /* Allocate memory for sparse storage of positions of non-zero */
@@ -90,19 +90,40 @@ int  createsparse()
    if (!errcode) freelists();
    ERRCODE(ordersparse(njuncs));
 
-   MSX.Aij = (double*)calloc(MSX.Ncoeffs + 1, sizeof(double));
-   MSX.Aii = (double*)calloc(MSX.Nobjects[NODE]+1, sizeof(double));
-   MSX.F = (double*)calloc(MSX.Nobjects[NODE]+1, sizeof(double));
-   MSX.temp = (double*)calloc(MSX.Nobjects[NODE] + 1, sizeof(double));
-   MSX.link = (int*)calloc(MSX.Nobjects[NODE] + 1, sizeof(int));
-   MSX.first = (int*)calloc(MSX.Nobjects[NODE] + 1, sizeof(int));
-   ERRCODE(MEMCHECK(MSX.Aij));
-   ERRCODE(MEMCHECK(MSX.Aii));
-   ERRCODE(MEMCHECK(MSX.F));
-   ERRCODE(MEMCHECK(MSX.temp));
-   ERRCODE(MEMCHECK(MSX.link));
-   ERRCODE(MEMCHECK(MSX.first));
+   MSX.Dispersion.Aij = (double*)calloc(MSX.Dispersion.Ncoeffs + 1, sizeof(double));
+   MSX.Dispersion.Aii = (double*)calloc(MSX.Nobjects[NODE]+1, sizeof(double));
+   MSX.Dispersion.F = (double*)calloc(MSX.Nobjects[NODE]+1, sizeof(double));
+   MSX.Dispersion.temp = (double*)calloc(MSX.Nobjects[NODE] + 1, sizeof(double));
+   MSX.Dispersion.link = (int*)calloc(MSX.Nobjects[NODE] + 1, sizeof(int));
+   MSX.Dispersion.first = (int*)calloc(MSX.Nobjects[NODE] + 1, sizeof(int));
+   ERRCODE(MEMCHECK(MSX.Dispersion.Aij));
+   ERRCODE(MEMCHECK(MSX.Dispersion.Aii));
+   ERRCODE(MEMCHECK(MSX.Dispersion.F));
+   ERRCODE(MEMCHECK(MSX.Dispersion.temp));
+   ERRCODE(MEMCHECK(MSX.Dispersion.link));
+   ERRCODE(MEMCHECK(MSX.Dispersion.first));
 
+ //  MSX.Dispersion.md = (double*)calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
+   MSX.Dispersion.al = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
+   MSX.Dispersion.bl = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
+   MSX.Dispersion.cl = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
+   MSX.Dispersion.rl = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
+   MSX.Dispersion.sol = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
+   MSX.Dispersion.gam = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
+   MSX.Dispersion.pipeDispersionCoeff = (double*)calloc(MSX.Nobjects[LINK] + 1, sizeof(double));
+   MSX.Dispersion.nodeQualUpdateDenom = (double*)calloc(MSX.Nobjects[NODE] + 1, sizeof(double));
+   MSX.Dispersion.nodeQualUpdateNum   = (double*)calloc(MSX.Nobjects[NODE] + 1, sizeof(double));
+
+   ERRCODE(MEMCHECK(MSX.Dispersion.ld));
+   ERRCODE(MEMCHECK(MSX.Dispersion.md));
+   ERRCODE(MEMCHECK(MSX.Dispersion.al));
+   ERRCODE(MEMCHECK(MSX.Dispersion.bl));
+   ERRCODE(MEMCHECK(MSX.Dispersion.cl));
+   ERRCODE(MEMCHECK(MSX.Dispersion.rl));
+   ERRCODE(MEMCHECK(MSX.Dispersion.sol));
+   ERRCODE(MEMCHECK(MSX.Dispersion.gam));
+   ERRCODE(MEMCHECK(MSX.Dispersion.nodeQualUpdateDenom));
+   ERRCODE(MEMCHECK(MSX.Dispersion.nodeQualUpdateNum));
 
 
    /* Re-build adjacency lists without removing parallel */
@@ -110,7 +131,7 @@ int  createsparse()
    ERRCODE(buildlists(FALSE));   //FALSE buildadjlists in 2.2
 
    /* Free allocated memory */
-   free(MSX.Degree);
+   free(MSX.Dispersion.Degree);
    return(errcode);
 }                        /* End of createsparse */
 
@@ -127,21 +148,21 @@ int  allocsparse()
    int errcode = 0;
    int nnodes = MSX.Nobjects[NODE];
    int nlinks = MSX.Nobjects[LINK];
-   MSX.Aii = NULL;
-   MSX.Aij = NULL;
-   MSX.F = NULL;
-   MSX.temp = NULL;
-   MSX.link = NULL;
-   MSX.first = NULL;
+   MSX.Dispersion.Aii = NULL;
+   MSX.Dispersion.Aij = NULL;
+   MSX.Dispersion.F = NULL;
+   MSX.Dispersion.temp = NULL;
+   MSX.Dispersion.link = NULL;
+   MSX.Dispersion.first = NULL;
 
-   MSX.Adjlist = (Padjlist *) calloc(nnodes+1,  sizeof(Padjlist));
-   MSX.Order  = (int *)   calloc(nnodes+1,  sizeof(int));
-   MSX.Row    = (int *)   calloc(nnodes+1,  sizeof(int));
-   MSX.Ndx    = (int *)   calloc(nlinks+1,  sizeof(int));
-   ERRCODE(MEMCHECK(MSX.Adjlist));
-   ERRCODE(MEMCHECK(MSX.Order));
-   ERRCODE(MEMCHECK(MSX.Row));
-   ERRCODE(MEMCHECK(MSX.Ndx));
+   MSX.Dispersion.Adjlist = (Padjlist *) calloc(nnodes+1,  sizeof(Padjlist));
+   MSX.Dispersion.Order  = (int *)   calloc(nnodes+1,  sizeof(int));
+   MSX.Dispersion.Row    = (int *)   calloc(nnodes+1,  sizeof(int));
+   MSX.Dispersion.Ndx    = (int *)   calloc(nlinks+1,  sizeof(int));
+   ERRCODE(MEMCHECK(MSX.Dispersion.Adjlist));
+   ERRCODE(MEMCHECK(MSX.Dispersion.Order));
+   ERRCODE(MEMCHECK(MSX.Dispersion.Row));
+   ERRCODE(MEMCHECK(MSX.Dispersion.Ndx));
    return(errcode);
 }
 
@@ -156,19 +177,33 @@ void  freesparse()
 */
 {
    freelists();
-   free(MSX.Adjlist);
-   free(MSX.Order);
-   free(MSX.Row);
-   free(MSX.Ndx);
-   free(MSX.XLNZ);
-   free(MSX.NZSUB);
-   free(MSX.LNZ); 
-   free(MSX.Aii);
-   free(MSX.Aij);
-   free(MSX.F);
-   free(MSX.link);
-   free(MSX.first);
-   free(MSX.temp);
+   FREE(MSX.Dispersion.Adjlist);
+   FREE(MSX.Dispersion.Order);
+   FREE(MSX.Dispersion.Row);
+   FREE(MSX.Dispersion.Ndx);
+   FREE(MSX.Dispersion.XLNZ);
+   FREE(MSX.Dispersion.NZSUB);
+   FREE(MSX.Dispersion.LNZ);
+   FREE(MSX.Dispersion.Aii);
+   FREE(MSX.Dispersion.Aij);
+   FREE(MSX.Dispersion.F);
+   FREE(MSX.Dispersion.link);
+   FREE(MSX.Dispersion.first);
+   FREE(MSX.Dispersion.temp);
+
+   FREE(MSX.Dispersion.md);
+   FREE(MSX.Dispersion.al);
+   FREE(MSX.Dispersion.bl);
+   FREE(MSX.Dispersion.cl);
+   FREE(MSX.Dispersion.rl);
+   FREE(MSX.Dispersion.sol);
+   FREE(MSX.Dispersion.gam);
+   FREE(MSX.Dispersion.pipeDispersionCoeff);
+   FREE(MSX.Dispersion.nodeQualUpdateDenom);
+   FREE(MSX.Dispersion.nodeQualUpdateNum);
+
+
+
 }                        /* End of freesparse */
 
 
@@ -188,10 +223,10 @@ int  buildlists(int paraflag)
    Padjlist  alink;
    
    freelists();
-   MSX.Adjlist = (Padjlist*)calloc(MSX.Nobjects[NODE] + 1, sizeof(Padjlist));
-   if (MSX.Adjlist == NULL) return 101;
+   MSX.Dispersion.Adjlist = (Padjlist*)calloc(MSX.Nobjects[NODE] + 1, sizeof(Padjlist));
+   if (MSX.Dispersion.Adjlist == NULL) return 101;
    for (i = 0; i <= MSX.Nobjects[NODE]; i++)
-       MSX.Adjlist[i] = NULL;
+       MSX.Dispersion.Adjlist[i] = NULL;
 
    /* For each link, update adjacency lists of its end nodes */
    for (k=1; k<=nlinks; k++)
@@ -206,8 +241,8 @@ int  buildlists(int paraflag)
       if (!pmark) alink->node = j;
       else        alink->node = 0;           /* Parallel link marker */
       alink->link = k;
-      alink->next = MSX.Adjlist[i];
-      MSX.Adjlist[i] = alink;
+      alink->next = MSX.Dispersion.Adjlist[i];
+      MSX.Dispersion.Adjlist[i] = alink;
 
       /* Include link in end node j's list */
       alink = (struct Sadjlist *) malloc(sizeof(struct Sadjlist));
@@ -215,8 +250,8 @@ int  buildlists(int paraflag)
       if (!pmark) alink->node = i;
       else        alink->node = 0;           /* Parallel link marker */
       alink->link = k;
-      alink->next = MSX.Adjlist[j];
-      MSX.Adjlist[j] = alink;
+      alink->next = MSX.Dispersion.Adjlist[j];
+      MSX.Dispersion.Adjlist[j] = alink;
    }
    if (errcode)freelists();
    return(errcode);
@@ -236,15 +271,15 @@ int  paralink(int i, int j, int k)
 */
 {
    Padjlist alink;
-   for (alink = MSX.Adjlist[i]; alink != NULL; alink = alink->next)
+   for (alink = MSX.Dispersion.Adjlist[i]; alink != NULL; alink = alink->next)
    {
       if (alink->node == j)     /* Link || to k (same end nodes) */
       {
-         MSX.Ndx[k] = alink->link;  /* Assign Ndx entry to this link */
+         MSX.Dispersion.Ndx[k] = alink->link;  /* Assign Ndx entry to this link */
          return(1);
       }
    }
-   MSX.Ndx[k] = k;                  /* Ndx entry if link not parallel */
+   MSX.Dispersion.Ndx[k] = k;                  /* Ndx entry if link not parallel */
    return(0);
 }                        /* End of paralink */
 
@@ -266,7 +301,7 @@ void  xparalinks()
    /* Scan adjacency list of each node */
    for (i=1; i<=nnodes; i++)
    {
-      alink = MSX.Adjlist[i];              /* First item in list */
+      alink = MSX.Dispersion.Adjlist[i];              /* First item in list */
       blink = NULL;
       while (alink != NULL)
       {
@@ -274,9 +309,9 @@ void  xparalinks()
          {
             if (blink == NULL)      /* This holds at start of list */
             {
-               MSX.Adjlist[i] = alink->next;
+               MSX.Dispersion.Adjlist[i] = alink->next;
                free(alink);             /* Remove item from list */
-               alink = MSX.Adjlist[i];
+               alink = MSX.Dispersion.Adjlist[i];
             }
             else                    /* This holds for interior of list */
             {
@@ -308,18 +343,18 @@ void  freelists()
    Padjlist alink;
    int nnodes = MSX.Nobjects[NODE];
 
-   if (MSX.Adjlist == NULL)
+   if (MSX.Dispersion.Adjlist == NULL)
        return;
    for (i=0; i<=nnodes; i++)
    {
-      for (alink = MSX.Adjlist[i]; alink != NULL; alink = MSX.Adjlist[i])
+      for (alink = MSX.Dispersion.Adjlist[i]; alink != NULL; alink = MSX.Dispersion.Adjlist[i])
       {
-         MSX.Adjlist[i] = alink->next;
+         MSX.Dispersion.Adjlist[i] = alink->next;
          free(alink);
       }
    }
-   free(MSX.Adjlist);
-   MSX.Adjlist = NULL;
+   free(MSX.Dispersion.Adjlist);
+   MSX.Dispersion.Adjlist = NULL;
 }                        /* End of freelists */
 
 
@@ -339,16 +374,18 @@ void  countdegree()
     int njuncs = MSX.Nobjects[NODE]-MSX.Nobjects[TANK];
     int errcode;
 
-    MSX.Degree = (int *)calloc(MSX.Nobjects[NODE] + 1, sizeof(int));
-    ERRCODE(MEMCHECK(MSX.Degree));
-    memset(MSX.Degree,0,(nnodes+1)*sizeof(int));
+    errcode = 0;
+
+    MSX.Dispersion.Degree = (int *)calloc(MSX.Nobjects[NODE] + 1, sizeof(int));
+    ERRCODE(MEMCHECK(MSX.Dispersion.Degree));
+    memset(MSX.Dispersion.Degree,0,(nnodes+1)*sizeof(int));
 
    /* NOTE: For purposes of node re-ordering, Tanks (nodes with  */
    /*       indexes above Njuncs) have zero degree of adjacency. */
 
     for (i=1; i<=njuncs; i++)
-        for (alink = MSX.Adjlist[i]; alink != NULL; alink = alink->next)
-            if (alink->node > 0) MSX.Degree[i]++;
+        for (alink = MSX.Dispersion.Adjlist[i]; alink != NULL; alink = alink->next)
+            if (alink->node > 0) MSX.Dispersion.Degree[i]++;
 }
 
 
@@ -367,21 +404,21 @@ int   reordernodes()
    int njuncs = MSX.Nobjects[NODE] - MSX.Nobjects[TANK];
    for (k=1; k<=nnodes; k++)
    {
-      MSX.Row[k] = k;
-      MSX.Order[k] = k;
+      MSX.Dispersion.Row[k] = k;
+      MSX.Dispersion.Order[k] = k;
    }
    n = njuncs;
    for (k=1; k<=n; k++)                   /* Examine each junction    */
    {
       m = mindegree(k,n);                 /* Node with lowest degree  */
-      knode = MSX.Order[m];                   /* Node's index             */
+      knode = MSX.Dispersion.Order[m];                   /* Node's index             */
       if (!growlist(knode)) return(101);  /* Augment adjacency list   */
-      MSX.Order[m] = MSX.Order[k];                /* Switch order of nodes    */
-      MSX.Order[k] = knode;
-      MSX.Degree[knode] = 0;                  /* In-activate node         */
+      MSX.Dispersion.Order[m] = MSX.Dispersion.Order[k];                /* Switch order of nodes    */
+      MSX.Dispersion.Order[k] = knode;
+      MSX.Dispersion.Degree[knode] = 0;                  /* In-activate node         */
    }
    for (k=1; k<=n; k++)                   /* Assign nodes to rows of  */
-     MSX.Row[MSX.Order[k]] = k;                   /*   coeff. matrix          */
+     MSX.Dispersion.Row[MSX.Dispersion.Order[k]] = k;                   /*   coeff. matrix          */
    return(0);
 }                        /* End of reordernodes */
 
@@ -402,7 +439,7 @@ int  mindegree(int k, int n)
 
    for (i=k; i<=n; i++)
    {
-      m = MSX.Degree[MSX.Order[i]];
+      m = MSX.Dispersion.Degree[MSX.Dispersion.Order[i]];
       if (m < min)
       {
          min = m;
@@ -428,12 +465,12 @@ int  growlist(int knode)
    Padjlist alink;
 
    /* Iterate through all nodes connected to knode */
-   for (alink = MSX.Adjlist[knode]; alink != NULL; alink = alink -> next)
+   for (alink = MSX.Dispersion.Adjlist[knode]; alink != NULL; alink = alink -> next)
    {
       node = alink->node;       /* End node of connecting link  */
-      if (MSX.Degree[node] > 0)     /* End node is active           */
+      if (MSX.Dispersion.Degree[node] > 0)     /* End node is active           */
       {
-         MSX.Degree[node]--;        /* Reduce degree of adjacency   */
+         MSX.Dispersion.Degree[node]--;        /* Reduce degree of adjacency   */
          if (!newlink(alink))   /* Add to adjacency list        */
             return(0);
       }
@@ -463,21 +500,21 @@ int  newlink(Padjlist alink)
 
       /* If jnode still active, and inode not connected to jnode, */
       /* then add a new connection between inode and jnode.       */
-      if (MSX.Degree[jnode] > 0)        /* jnode still active */
+      if (MSX.Dispersion.Degree[jnode] > 0)        /* jnode still active */
       {
          if (!linked(inode,jnode))  /* inode not linked to jnode */
          {
 
             /* Since new connection represents a non-zero coeff. */
 	    /* in the solution matrix, update the coeff. count.  */
-            MSX.Ncoeffs++;
+            MSX.Dispersion.Ncoeffs++;
 
 	    /* Update adjacency lists for inode & jnode to */
 	    /* reflect the new connection.                 */
-            if (!addlink(inode,jnode,MSX.Ncoeffs)) return(0);
-            if (!addlink(jnode,inode,MSX.Ncoeffs)) return(0);
-            MSX.Degree[inode]++;
-            MSX.Degree[jnode]++;
+            if (!addlink(inode,jnode,MSX.Dispersion.Ncoeffs)) return(0);
+            if (!addlink(jnode,inode,MSX.Dispersion.Ncoeffs)) return(0);
+            MSX.Dispersion.Degree[inode]++;
+            MSX.Dispersion.Degree[jnode]++;
          }
       }
    }
@@ -496,7 +533,7 @@ int  linked(int i, int j)
 */
 {
    Padjlist alink;
-   for (alink = MSX.Adjlist[i]; alink != NULL; alink = alink->next)
+   for (alink = MSX.Dispersion.Adjlist[i]; alink != NULL; alink = alink->next)
       if (alink->node == j) return(1);
    return(0);
 }                        /* End of linked */
@@ -518,8 +555,8 @@ int  addlink(int i, int j, int n)
    if (alink == NULL) return(0);
    alink->node = j;
    alink->link = n;
-   alink->next = MSX.Adjlist[i];
-   MSX.Adjlist[i] = alink;
+   alink->next = MSX.Dispersion.Adjlist[i];
+   MSX.Dispersion.Adjlist[i] = alink;
    return(1);
 }                        /* End of addlink */
 
@@ -539,34 +576,34 @@ int  storesparse(int n)
    int   errcode = 0;
 
    /* Allocate sparse matrix storage */
-   MSX.XLNZ  = (int *) calloc(n+2, sizeof(int));
-   MSX.NZSUB = (int *) calloc(MSX.Ncoeffs+2, sizeof(int));
-   MSX.LNZ   = (int *) calloc(MSX.Ncoeffs+2, sizeof(int));
-   ERRCODE(MEMCHECK(MSX.XLNZ));
-   ERRCODE(MEMCHECK(MSX.NZSUB));
-   ERRCODE(MEMCHECK(MSX.LNZ));
+   MSX.Dispersion.XLNZ  = (int *) calloc(n+2, sizeof(int));
+   MSX.Dispersion.NZSUB = (int *) calloc(MSX.Dispersion.Ncoeffs+2, sizeof(int));
+   MSX.Dispersion.LNZ   = (int *) calloc(MSX.Dispersion.Ncoeffs+2, sizeof(int));
+   ERRCODE(MEMCHECK(MSX.Dispersion.XLNZ));
+   ERRCODE(MEMCHECK(MSX.Dispersion.NZSUB));
+   ERRCODE(MEMCHECK(MSX.Dispersion.LNZ));
    if (errcode) return(errcode);
 
    /* Generate row index pointers for each column of matrix */
    k = 0;
-   MSX.XLNZ[1] = 1;
+   MSX.Dispersion.XLNZ[1] = 1;
    for (i=1; i<=n; i++)             /* column */
    {
        m = 0;
-       ii = MSX.Order[i];
-       for (alink = MSX.Adjlist[ii]; alink != NULL; alink = alink->next)
+       ii = MSX.Dispersion.Order[i];
+       for (alink = MSX.Dispersion.Adjlist[ii]; alink != NULL; alink = alink->next)
        {
-          j = MSX.Row[alink->node];    /* row */
+          j = MSX.Dispersion.Row[alink->node];    /* row */
           l = alink->link;
           if (j > i && j <= n)
           {
              m++;
              k++;
-             MSX.NZSUB[k] = j;
-             MSX.LNZ[k] = l;
+             MSX.Dispersion.NZSUB[k] = j;
+             MSX.Dispersion.LNZ[k] = l;
           }
        }
-       MSX.XLNZ[i+1] = MSX.XLNZ[i] + m;
+       MSX.Dispersion.XLNZ[i+1] = MSX.Dispersion.XLNZ[i] + m;
    }
    return(errcode);
 }                        /* End of storesparse */
@@ -586,8 +623,8 @@ int  ordersparse(int n)
    int  errcode = 0;
 
    xlnzt  = (int *) calloc(n+2, sizeof(int));
-   nzsubt = (int *) calloc(MSX.Ncoeffs+2, sizeof(int));
-   lnzt   = (int *) calloc(MSX.Ncoeffs+2, sizeof(int));
+   nzsubt = (int *) calloc(MSX.Dispersion.Ncoeffs+2, sizeof(int));
+   lnzt   = (int *) calloc(MSX.Dispersion.Ncoeffs+2, sizeof(int));
    nzt    = (int *) calloc(n+2, sizeof(int));
    ERRCODE(MEMCHECK(xlnzt));
    ERRCODE(MEMCHECK(nzsubt));
@@ -600,14 +637,14 @@ int  ordersparse(int n)
       for (i=1; i<=n; i++) nzt[i] = 0;
       for (i=1; i<=n; i++)
       {
-          for (k=MSX.XLNZ[i]; k<MSX.XLNZ[i+1]; k++) nzt[MSX.NZSUB[k]]++;
+          for (k=MSX.Dispersion.XLNZ[i]; k<MSX.Dispersion.XLNZ[i+1]; k++) nzt[MSX.Dispersion.NZSUB[k]]++;
       }
       xlnzt[1] = 1;
       for (i=1; i<=n; i++) xlnzt[i+1] = xlnzt[i] + nzt[i];
 
       /* Transpose matrix twice to order column indexes */
-      transpose(n,MSX.XLNZ,MSX.NZSUB,MSX.LNZ,xlnzt,nzsubt,lnzt,nzt);
-      transpose(n,xlnzt,nzsubt,lnzt,MSX.XLNZ,MSX.NZSUB,MSX.LNZ,nzt);
+      transpose(n,MSX.Dispersion.XLNZ,MSX.Dispersion.NZSUB,MSX.Dispersion.LNZ,xlnzt,nzsubt,lnzt,nzt);
+      transpose(n,xlnzt,nzsubt,lnzt,MSX.Dispersion.XLNZ,MSX.Dispersion.NZSUB,MSX.Dispersion.LNZ,nzt);
    }
 
    /* Reclaim memory */
@@ -681,8 +718,8 @@ int  linsolve(int n, double *Aii, double *Aij, double *B)
    int    errcode = 0;
    double bj, diagj, ljk;
 
-   memset(MSX.temp,0,(n+1)*sizeof(double));
-   memset(MSX.link,0,(n+1)*sizeof(int));
+   memset(MSX.Dispersion.temp,0,(n+1)*sizeof(double));
+   memset(MSX.Dispersion.link,0,(n+1)*sizeof(int));
 
    /* Begin numerical factorization of matrix A into L */
    /*   Compute column L(*,j) for j = 1,...n */
@@ -690,34 +727,34 @@ int  linsolve(int n, double *Aii, double *Aij, double *B)
    {
       /* For each column L(*,k) that affects L(*,j): */
       diagj = 0.0;
-      newk = MSX.link[j];
+      newk = MSX.Dispersion.link[j];
       k = newk;
       while (k != 0)
       {
 
          /* Outer product modification of L(*,j) by  */
          /* L(*,k) starting at first[k] of L(*,k).   */
-         newk = MSX.link[k];
-         kfirst = MSX.first[k];
-         ljk = Aij[MSX.LNZ[kfirst]];
+         newk = MSX.Dispersion.link[k];
+         kfirst = MSX.Dispersion.first[k];
+         ljk = Aij[MSX.Dispersion.LNZ[kfirst]];
          diagj += ljk*ljk;
          istrt = kfirst + 1;
-         istop = MSX.XLNZ[k+1] - 1;
+         istop = MSX.Dispersion.XLNZ[k+1] - 1;
          if (istop >= istrt)
          {
 
 	     /* Before modification, update vectors 'first' */
 	     /* and 'link' for future modification steps.   */
-            MSX.first[k] = istrt;
-            isub = MSX.NZSUB[istrt];
-            MSX.link[k] = MSX.link[isub];
-            MSX.link[isub] = k;
+            MSX.Dispersion.first[k] = istrt;
+            isub = MSX.Dispersion.NZSUB[istrt];
+            MSX.Dispersion.link[k] = MSX.Dispersion.link[isub];
+            MSX.Dispersion.link[isub] = k;
 
 	    /* The actual mod is saved in vector 'temp'. */
             for (i=istrt; i<=istop; i++)
             {
-               isub = MSX.NZSUB[i];
-               MSX.temp[isub] += Aij[MSX.LNZ[i]]*ljk;
+               isub = MSX.Dispersion.NZSUB[i];
+               MSX.Dispersion.temp[isub] += Aij[MSX.Dispersion.LNZ[i]]*ljk;
             }
          }
          k = newk;
@@ -733,20 +770,20 @@ int  linsolve(int n, double *Aii, double *Aij, double *B)
       }
       diagj = sqrt(diagj);
       Aii[j] = diagj;
-      istrt = MSX.XLNZ[j];
-      istop = MSX.XLNZ[j+1] - 1;
+      istrt = MSX.Dispersion.XLNZ[j];
+      istop = MSX.Dispersion.XLNZ[j+1] - 1;
       if (istop >= istrt)
       {
-         MSX.first[j] = istrt;
-         isub = MSX.NZSUB[istrt];
-         MSX.link[j] = MSX.link[isub];
-         MSX.link[isub] = j;
+         MSX.Dispersion.first[j] = istrt;
+         isub = MSX.Dispersion.NZSUB[istrt];
+         MSX.Dispersion.link[j] = MSX.Dispersion.link[isub];
+         MSX.Dispersion.link[isub] = j;
          for (i=istrt; i<=istop; i++)
          {
-            isub = MSX.NZSUB[i];
-            bj = (Aij[MSX.LNZ[i]] - MSX.temp[isub])/diagj;
-            Aij[MSX.LNZ[i]] = bj;
-            MSX.temp[isub] = 0.0;
+            isub = MSX.Dispersion.NZSUB[i];
+            bj = (Aij[MSX.Dispersion.LNZ[i]] - MSX.Dispersion.temp[isub])/diagj;
+            Aij[MSX.Dispersion.LNZ[i]] = bj;
+            MSX.Dispersion.temp[isub] = 0.0;
          }
       }
    }      /* next j */
@@ -756,14 +793,14 @@ int  linsolve(int n, double *Aii, double *Aij, double *B)
    {
       bj = B[j]/Aii[j];
       B[j] = bj;
-      istrt = MSX.XLNZ[j];
-      istop = MSX.XLNZ[j+1] - 1;
+      istrt = MSX.Dispersion.XLNZ[j];
+      istop = MSX.Dispersion.XLNZ[j+1] - 1;
       if (istop >= istrt)
       {
          for (i=istrt; i<=istop; i++)
          {
-            isub = MSX.NZSUB[i];
-            B[isub] -= Aij[MSX.LNZ[i]]*bj;
+            isub = MSX.Dispersion.NZSUB[i];
+            B[isub] -= Aij[MSX.Dispersion.LNZ[i]]*bj;
          }
       }
    }
@@ -772,14 +809,14 @@ int  linsolve(int n, double *Aii, double *Aij, double *B)
    for (j=n; j>=1; j--)
    {
       bj = B[j];
-      istrt = MSX.XLNZ[j];
-      istop = MSX.XLNZ[j+1] - 1;
+      istrt = MSX.Dispersion.XLNZ[j];
+      istop = MSX.Dispersion.XLNZ[j+1] - 1;
       if (istop >= istrt)
       {
          for (i=istrt; i<=istop; i++)
          {
-            isub = MSX.NZSUB[i];
-            bj -= Aij[MSX.LNZ[i]]*B[isub];
+            isub = MSX.Dispersion.NZSUB[i];
+            bj -= Aij[MSX.Dispersion.LNZ[i]]*B[isub];
          }
       }
       B[j] = bj/Aii[j];

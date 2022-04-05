@@ -379,6 +379,8 @@ void writemassbalance()
         writeLine(s1);
         snprintf(s1, MAXMSG, "Mass Inflow:       %12.5e", MSX.MassBalance.inflow[m]);
         writeLine(s1);
+        snprintf(s1, MAXMSG, "Mass Dispersed Inflow:       %12.5e", MSX.MassBalance.indisperse[m]);
+        writeLine(s1);
         snprintf(s1, MAXMSG, "Mass Outflow:      %12.5e", MSX.MassBalance.outflow[m]);
         writeLine(s1);
         snprintf(s1, MAXMSG, "Mass Reacted:      %12.5e", MSX.MassBalance.reacted[m]);
