@@ -25,6 +25,7 @@
 #include "hash.h"
 #include "smatrix.h"
 #include "epanet2.h"
+#include "dispersion.h"
 //  Exported variables
 //--------------------
 MSXproject  MSX;                            // MSX project data
@@ -526,7 +527,7 @@ int createObjects()
 
     for (i=1; i<=MSX.Nobjects[TERM]; i++) MSX.Term[i].expr = NULL;
 
-    MSX.Dispersion.MaxSegments = 10000;
+    MSX.Dispersion.MaxSegments = MAXSEGMENTS;
     MSX.Dispersion.DIFFUS = 1.29E-8;
     MSX.Dispersion.md = (double*)
         calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));

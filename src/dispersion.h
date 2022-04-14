@@ -1,4 +1,4 @@
-#define MAXSEGMENTS 5000
+#define MAXSEGMENTS 10000
 
 typedef enum {
 	XHEAD,         // pump cannot deliver head (closed)
@@ -14,7 +14,8 @@ typedef enum {
 	OVERFLOWING    // tank overflowing
 } StatusType;
 
-
+int dispersion_open();
+int dispersion_close();
 void	dispersion_pipe(int m, long tstep);			//effective dispersion coefficient and upstream/downstream node impact calculation
 void    solve_nodequal(int m, long tstep);			//solve nodal concentration
 void    segqual_update(int m, long tstep);			//update pipe segment concentration

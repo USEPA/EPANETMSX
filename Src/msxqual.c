@@ -430,6 +430,7 @@ int MSXqual_step(long *t, long *tleft)
                 smassout -= sreacted;
             else
                 smassin += sreacted;
+
             if (smassin == 0)
                 MSX.MassBalance.ratio[m] = 1.0;
             else
@@ -453,6 +454,7 @@ int MSXqual_step(long *t, long *tleft)
                 smassout -= sreacted;
             else
                 smassin += sreacted;
+
             if (smassin == 0)
                 MSX.MassBalance.ratio[m] = 1.0;
             else

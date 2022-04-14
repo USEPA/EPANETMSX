@@ -39,6 +39,7 @@ Linsolve() solves the linearized system of hydraulic equations.
 //#include "text.h"
 #include "msxtypes.h"
 #include "smatrix.h"
+#include "dispersion.h"
 //#include "funcs.h"
 #define  EXTERN  extern
 //#include "vars.h"
@@ -49,6 +50,9 @@ Linsolve() solves the linearized system of hydraulic equations.
 //--------------------
 extern MSXproject  MSX;                // MSX project data
 #define ERRCODE(x) (errcode = ((errcode>100) ? (errcode) : (x)))
+
+
+
 
 int  createsparse()
 /*
@@ -104,27 +108,16 @@ int  createsparse()
    ERRCODE(MEMCHECK(MSX.Dispersion.first));
 
  //  MSX.Dispersion.md = (double*)calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
-   MSX.Dispersion.al = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
-   MSX.Dispersion.bl = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
-   MSX.Dispersion.cl = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
-   MSX.Dispersion.rl = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
-   MSX.Dispersion.sol = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
-   MSX.Dispersion.gam = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
+ 
    MSX.Dispersion.pipeDispersionCoeff = (double*)calloc(MSX.Nobjects[LINK] + 1, sizeof(double));
-   MSX.Dispersion.nodeQualUpdateDenom = (double*)calloc(MSX.Nobjects[NODE] + 1, sizeof(double));
-   MSX.Dispersion.nodeQualUpdateNum   = (double*)calloc(MSX.Nobjects[NODE] + 1, sizeof(double));
+ 
+
 
    ERRCODE(MEMCHECK(MSX.Dispersion.ld));
    ERRCODE(MEMCHECK(MSX.Dispersion.md));
-   ERRCODE(MEMCHECK(MSX.Dispersion.al));
-   ERRCODE(MEMCHECK(MSX.Dispersion.bl));
-   ERRCODE(MEMCHECK(MSX.Dispersion.cl));
-   ERRCODE(MEMCHECK(MSX.Dispersion.rl));
-   ERRCODE(MEMCHECK(MSX.Dispersion.sol));
-   ERRCODE(MEMCHECK(MSX.Dispersion.gam));
-   ERRCODE(MEMCHECK(MSX.Dispersion.nodeQualUpdateDenom));
-   ERRCODE(MEMCHECK(MSX.Dispersion.nodeQualUpdateNum));
-
+ 
+ 
+   dispersion_open();
 
    /* Re-build adjacency lists without removing parallel */
    /* links for use in future connectivity checking.     */
@@ -192,15 +185,10 @@ void  freesparse()
    FREE(MSX.Dispersion.temp);
 
    FREE(MSX.Dispersion.md);
-   FREE(MSX.Dispersion.al);
-   FREE(MSX.Dispersion.bl);
-   FREE(MSX.Dispersion.cl);
-   FREE(MSX.Dispersion.rl);
-   FREE(MSX.Dispersion.sol);
-   FREE(MSX.Dispersion.gam);
+ 
    FREE(MSX.Dispersion.pipeDispersionCoeff);
-   FREE(MSX.Dispersion.nodeQualUpdateDenom);
-   FREE(MSX.Dispersion.nodeQualUpdateNum);
+   dispersion_close();
+
 
 
 

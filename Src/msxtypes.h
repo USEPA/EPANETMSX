@@ -448,17 +448,10 @@ typedef struct
     double* F;           // Right hand side vector
     
     Padjlist* Adjlist;                   // Node adjacency lists
-    
-    double* al;                         //vector helping solve tridaigonal system of eqns.
-    double* bl;                         //vector helping solve tridaigonal system of eqns.
-    double* cl;                         //vector helping solve tridaigonal system of eqns.
-    double* rl;                         //vector helping solve tridaigonal system of eqns.
-    double* sol;                        //vector helping solve tridaigonal system of eqns.
+
+
     double* md;                         //molecular diffusion
     double* ld;                         //fixed longitudinal dispersion coefficient
-    double* gam;
-    double* nodeQualUpdateNum;			//for dispersion new nodal quality update 
-    double* nodeQualUpdateDenom;		//for dispersion new nodal quality update
     double* pipeDispersionCoeff;        //effective longitudinal dispersion coefficient	 
 }Sdispersion;
 
