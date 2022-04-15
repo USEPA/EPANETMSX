@@ -179,8 +179,7 @@ void dispersion_pipe(int m, long tstep)
 			}
 			if (nseg == 0)
 				continue;
-			if (nseg > MAXSEGMENTS)
-				printf("too many segs\n");
+		
 
 			al[nseg + 1] = 0.0;
 			bl[nseg + 1] = 1.0;

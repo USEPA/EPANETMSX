@@ -309,6 +309,7 @@ typedef struct                         // NODE OBJECT
 
 typedef struct                         // LINK OBJECT
 {
+   int    nsegs;                        // number of active segments   
    int    n1;                          // start node index
    int    n2;                          // end node index
    double diam;                        // diameter

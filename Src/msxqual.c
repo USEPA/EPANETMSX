@@ -1246,6 +1246,8 @@ void  removeAllSegs(int k)
         seg = MSX.FirstSeg[k];
     }
     MSX.LastSeg[k] = NULL;
+    if (k <= MSX.Nobjects[LINK])
+        MSX.Link[k].nsegs =  0;
 }
 
 void topological_transport(long dt)
@@ -1364,8 +1366,13 @@ void evalnodeoutflow(int k, double * upnodequal, long tstep)
 
     if (seg)
     {
-        if(!MSXqual_isSame(seg->c, upnodequal)) 
-            useNewSeg = 1;
+        if (!MSXqual_isSame(seg->c, upnodequal))
+        {
+            if (MSX.DispersionFlag == 1 && MSX.Link[k].nsegs < MSX.Dispersion.MaxSegments)
+                useNewSeg = 1;
+            else
+                useNewSeg = 0;    
+        }
 
         if (useNewSeg == 0)
         {
@@ -1823,7 +1830,7 @@ void MSXqual_reversesegs(int k)
 **--------------------------------------------------------------
 */
 {
-    Pseg  seg, nseg, pseg;
+    Pseg  seg, cseg, pseg;
 
     seg = MSX.FirstSeg[k];
     MSX.FirstSeg[k] = MSX.LastSeg[k];
@@ -1831,11 +1838,11 @@ void MSXqual_reversesegs(int k)
     pseg = NULL;
     while (seg != NULL)
     {
-        nseg = seg->prev;
+        cseg = seg->prev;
         seg->prev = pseg;
-        seg->next = nseg;
+        seg->next = cseg;
         pseg = seg;
-        seg = nseg;
+        seg = cseg;
     }
 }
 
@@ -1933,4 +1940,6 @@ void  MSXqual_addSeg(int k, Pseg seg)
         seg->next = MSX.LastSeg[k];
     }
     MSX.LastSeg[k] = seg;
+    if (k <= MSX.Nobjects[LINK])
+        MSX.Link[k].nsegs++;
 }

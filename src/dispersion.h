@@ -1,4 +1,4 @@
-#define MAXSEGMENTS 10000
+#define MAXSEGMENTS 3000
 
 typedef enum {
 	XHEAD,         // pump cannot deliver head (closed)
