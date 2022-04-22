@@ -703,10 +703,13 @@ int parseOption()
       case COMPILER_OPTION:                                                    //1.1.00
           k = MSXutils_findmatch(Tok[1], CompilerWords);
           if ( k < 0 ) return ERR_KEYWORD;
- //         if ( k == 1 ) return ERR_UNSUPPORTED_OPTION;
     	  MSX.Compiler = k;
 	  break;
 
+      case MAXSEGMENT_OPTION:
+          k = atoi(Tok[1]);
+          if (k <= 0) return ERR_NUMBER;
+          MSX.Dispersion.MaxSegments = MAX(k, 50);  //at least 50 segments
     }
     return 0;
 }

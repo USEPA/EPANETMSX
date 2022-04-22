@@ -11,6 +11,7 @@
 #include <omp.h>
 #include "msxtypes.h"
 #include "dispersion.h"
+#include "smatrix.h"
 #define ERRCODE(x) (errcode = ((errcode>100) ? (errcode) : (x)))
 //  External variables
 //--------------------
@@ -69,17 +70,16 @@ int dispersion_close()
 void dispersion_pipe(int m, long tstep)
 {
 
-	double cons;
-	double ldispersion;
-	double flowrate, velocity, area;
-	int nseg, k;
-	double diam;
-	double vd, vu, vself, asquare, dh, frictionfactor;
+	double cons = 0.0;
+	double ldispersion = 0.0;
+	double flowrate = 0.0, velocity = 0.0, area = 0.0;
+	int nseg = 0, k;
+	double diam = 0.0;
+	double vd = 0.0, vu = 0.0, vself = 0.0, asquare = 0.0, dh = 0.0, frictionfactor = 0.0;
 	double reynolds=0, shearvelocity=0;
-	//	double aaa, ccc;
-	Pseg seg;
+	Pseg seg = NULL;
 
-	double elpt;
+	double elpt = 0.0;
 	double d0 = 1.292e-8;   //molecular diffusivity 1.292e-8 ft^2/s   1.2e-9 m^2/s
 	
 	d0 = MSX.Dispersion.md[m];
@@ -88,6 +88,7 @@ void dispersion_pipe(int m, long tstep)
 		#pragma omp for private(seg, cons, vd, vu, vself, k, nseg, asquare, velocity, diam, area, flowrate, reynolds, dh, frictionfactor, shearvelocity, ldispersion, elpt)
 		for (k = 1; k <= MSX.Nobjects[LINK]; k++)
 		{
+			
 			velocity = 0;
 			if (MSX.FirstSeg[k] == NULL)
 				continue;
@@ -255,11 +256,11 @@ void solve_nodequal(int m, long tstep)
 	Psource source;
 	int n1, n2;
 	double diam, area, asquare;
-	double vsegdown, vsegup, newqual, diffqual;
+
 	//	double dispersion =  147.25;
 	double ldispersion;
 	double coelastseg, coefirstseg;
-	double nodequaldiff;
+
 	int njuncs = MSX.Nobjects[NODE] - MSX.Nobjects[TANK];
 	int found = 0;
 
@@ -386,14 +387,14 @@ void solve_nodequal(int m, long tstep)
 void   segqual_update(int m, long tstep)
 {
 
-	Pseg seg;
-	Psource source;
-	int n1, n2, k;
+	Pseg seg = NULL;
+	Psource source = NULL;
+	int n1 = 0, n2 = 0, k;
 	double mass1 = 0;
 	double mass2 = 0;
 	double dispersedin = 0;
-	double ldispersion, massin;
-	double area;
+	double ldispersion = 0, massin = 0;
+	double area = 0.0;
 	int njuncs = MSX.Nobjects[NODE] - MSX.Nobjects[TANK];
 #pragma omp parallel
 	{

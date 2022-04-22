@@ -207,7 +207,8 @@ typedef  float REAL4;
                   TIMESTEP_OPTION,
                   RTOL_OPTION,
                   ATOL_OPTION,
-				  COMPILER_OPTION};                                            //1.1.00
+				  COMPILER_OPTION,
+                  MAXSEGMENT_OPTION};                                            //1.1.00
 
  enum CompilerType                     // C compiler type                      //1.1.00
                  {NO_COMPILER,

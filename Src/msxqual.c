@@ -460,8 +460,7 @@ int MSXqual_step(long *t, long *tleft)
             else
                 MSX.MassBalance.ratio[m] = smassout / smassin;
 
-        //    printf("SPECIES %s: %f %f %f\n", MSX.Species[m].id, smassout, smassin, MSX.MassBalance.ratio[m]);
-
+      
         }
         CALL(errcode, MSXout_saveFinalResults());
     }
@@ -772,9 +771,12 @@ void  initSegs()
 
         MSXchem_equil(LINK, MSX.C1);
         v = LINKVOL(k);
-        if ( v > 0.0 )
-            for (int ns = 0; ns < 100; ns++)
-                MSXqual_addSeg(k, MSXqual_getFreeSeg(v/100.0, MSX.C1));
+        if (v > 0.0)
+        {
+            int ninitsegs = MIN(100, MSX.Dispersion.MaxSegments);
+            for (int ns = 0; ns < ninitsegs; ns++)
+                MSXqual_addSeg(k, MSXqual_getFreeSeg(v / (1.0*ninitsegs), MSX.C1));
+        }
     }
 
 // --- initialize segments in tanks

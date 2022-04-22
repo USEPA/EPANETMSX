@@ -22,7 +22,7 @@ static char *MsxSectWords[] = {"[TITLE", "[SPECIE",  "[COEFF",  "[TERM",
                                "[REPORT", "[DISPER", NULL};
 static char *ReportWords[]  = {"NODE", "LINK", "SPECIE", "FILE", "PAGESIZE", NULL};
 static char *OptionTypeWords[] = {"AREA_UNITS", "RATE_UNITS", "SOLVER", "COUPLING",
-                                  "TIMESTEP", "RTOL", "ATOL", "COMPILER", NULL};  //1.1.00
+                                  "TIMESTEP", "RTOL", "ATOL", "COMPILER", "SEGMENTS",NULL};  //1.1.00
 static char *CompilerWords[]   = {"NONE", "VC", "GC", NULL};                      //1.1.00
 static char *SourceTypeWords[] = {"CONC", "MASS", "SETPOINT", "FLOW", NULL};      //(FS-01/10/2008 To fix bug 11)
 static char *MixingTypeWords[] = {"MIXED", "2COMP", "FIFO", "LIFO", NULL};
