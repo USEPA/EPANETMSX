@@ -144,7 +144,7 @@ void dispersion_pipe(int m, long tstep)
 				domi = ldispersion / (velocity * velocity * tstep);
 			else
 				domi = 1000;
-			if (domi >= 0.000 && ldispersion >= 1E-4)
+			if (domi >= 0.000 && ldispersion >= 1.0E-8)
 			{
 				MSX.Dispersion.pipeDispersionCoeff[k] = ldispersion;
 			}
@@ -401,6 +401,8 @@ void   segqual_update(int m, long tstep)
 		#pragma omp for private(k, n1, n2, seg, source, mass1, mass2, ldispersion, massin, area)
 		for (k = 1; k <= MSX.Nobjects[LINK]; k++)
 		{
+			mass1 = 0;
+			mass2 = 0;
 			ldispersion = MSX.Dispersion.pipeDispersionCoeff[k];
 			if (ldispersion <= 0.0)
 				continue;
