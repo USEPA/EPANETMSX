@@ -1,8 +1,8 @@
 //-----------------------------------------------------------------------------
 //   hash.c
-// 
-//   Implementation of a simple Hash Table for string storage & retrieval
 //
+//   Implementation of a simple Hash Table for string storage & retrieval
+// /
 //   Written by L. Rossman
 //   Last Updated on 6/19/03
 //
