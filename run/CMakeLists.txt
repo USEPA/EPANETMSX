@@ -26,6 +26,7 @@ source_group("CLI" FILES ${MSX_CLI_SOURCES})
 # Creates the EPANET-MSX command line executable
 add_executable(runepanetmsx ${MSX_CLI_SOURCES})
 if(NOT WIN32)
+  find_library(EPANET_LIB epanet2 NAMES epanet2 PATHS ${PROJECT_SOURCE_DIR}/include NO_DEFAULT_PATH)
   target_link_libraries(runepanetmsx LINK_PUBLIC epanetmsx m)
 else(NOT WIN32)
   find_library(EPANET_LIB epanet2 NAMES epanet2 PATHS ${PROJECT_SOURCE_DIR}/include NO_DEFAULT_PATH)

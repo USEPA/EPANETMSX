@@ -26,7 +26,7 @@
 
 // --- define DLLEXPORT
 
-#ifndef DLLEXPORT                                                              // ttaxon - 9/7/10
+//#ifndef DLLEXPORT                                                              // ttaxon - 9/7/10
   #ifdef WINDOWS
     #ifdef __cplusplus
     #define DLLEXPORT extern "C" __declspec(dllexport) __stdcall
@@ -40,7 +40,7 @@
     #define DLLEXPORT
     #endif
   #endif  
-#endif
+//#endif
 
 // --- define MSX constants
 

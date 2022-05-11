@@ -41,8 +41,11 @@ IF(MSVC AND "${CMAKE_VS_PLATFORM_NAME}" MATCHES "(Win32)")
   set_source_files_properties(${PROJECT_SOURCE_DIR}/include/msx.def PROPERTIES_HEADER_FILE_ONLY TRUE)
   target_link_libraries(epanetmsx ${EPANET_LIB} OpenMP::OpenMP_C)
 ELSE(TRUE)
+  find_library(EPANET_LIB epanet2 NAMES epanet2 PATHS ${PROJECT_SOURCE_DIR}/include NO_DEFAULT_PATH)
   add_library(epanetmsx SHARED ${MSX_SOURCES})
-  target_link_libraries(epanetmsx OpenMP::OpenMP_C)
+  target_link_libraries(epanetmsx ${EPANET_LIB} OpenMP::OpenMP_C)
 ENDIF(MSVC AND "${CMAKE_VS_PLATFORM_NAME}" MATCHES "(Win32)")
 
 target_include_directories(epanetmsx PUBLIC ${PROJECT_SOURCE_DIR}/include)
+
+

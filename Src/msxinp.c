@@ -102,6 +102,7 @@ static int    parseParameter(void);
 static int    parseSource(void);
 static int    parsePattern(void);
 static int    parseReport(void);
+static int    parseDispers(void);
 static int    getVariableCode(char *id);
 static int    getTokens(char *s);
 static void   writeInpErrMsg(int errcode, char *sect, char *line, int lineCount);
@@ -1286,9 +1287,9 @@ int parseDispers()
 **    an error code (0 if no error)
 */
 {
-    int err, i, j, k, m;
+    int m;
     double  x;
-    Psource source;
+
 
     // --- get source type
 

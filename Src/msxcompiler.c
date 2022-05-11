@@ -72,6 +72,7 @@ int MSXcompiler_open()
 */
 {
     char cmd[256];
+    char arch[100];
     FILE* f;
     int   err;
 
@@ -110,9 +111,14 @@ int MSXcompiler_open()
 // --- compile the source code file to a dynamic link library file
 
 #ifdef WINDOWS
+#ifdef _WIN64
+    strcpy(arch, "x64");
+#else
+    strcpy(arch, "x86");
+#endif
         if ( MSX.Compiler == VC )
         {            
-            sprintf(cmd, "runvc.bat %s", srcFile);
+            sprintf(cmd, "runvc.bat %s %s", srcFile, arch);
             err = MSXfuncs_run(cmd);
         }
 

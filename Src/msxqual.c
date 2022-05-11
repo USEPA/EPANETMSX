@@ -19,7 +19,7 @@
 #include "msxtypes.h"
 //#include "mempool.h"
 #include "msxutils.h"
-
+#include "dispersion.h"
 // Macros to identify upstream & downstream nodes of a link
 // under the current flow and to compute link volume
 //

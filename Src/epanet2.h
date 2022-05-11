@@ -146,9 +146,9 @@
 
 #ifdef WINDOWS
   #ifdef __cplusplus
-  #define DLLEXPORT extern "C" __declspec(dllexport) __stdcall
+  #define DLLEXPORT extern "C" __declspec(dllimport) __stdcall
   #else
-  #define DLLEXPORT __declspec(dllexport) __stdcall
+  #define DLLEXPORT __declspec(dllimport) __stdcall
   #endif
 #else
   #ifdef __cplusplus

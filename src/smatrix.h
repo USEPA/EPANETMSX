@@ -1,5 +1,5 @@
 /* ----------- SMATRIX.C ---------------*/
-int     createdispersionsparse(void);               /* Creates sparse matrix      */
+int     createsparse(void);               /* Creates sparse matrix      */
 int     allocsparse(void);                /* Allocates matrix memory    */
 void    freesparse(void);                 /* Frees matrix memory        */
 int     buildlists(int);                  /* Builds adjacency lists     */

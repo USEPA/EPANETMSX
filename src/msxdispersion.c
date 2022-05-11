@@ -24,6 +24,7 @@ static double* rl;                         //vector helping solve tridaigonal sy
 static double* sol;                        //vector helping solve tridaigonal system of eqns.
 
 static double* gam;
+extern int    MSXchem_equil(int zone, double* c);
 
 #pragma omp threadprivate(al, bl, cl, rl, sol, gam)
 
@@ -144,7 +145,7 @@ void dispersion_pipe(int m, long tstep)
 				domi = ldispersion / (velocity * velocity * tstep);
 			else
 				domi = 1000;
-			if (domi >= 0.000 && ldispersion >= 1.0E-8)
+			if (domi >= 0.000 && MSX.Link[k].len*velocity/ldispersion < 1.0e6)  //Peclet numer
 			{
 				MSX.Dispersion.pipeDispersionCoeff[k] = ldispersion;
 			}
@@ -348,8 +349,6 @@ void solve_nodequal(int m, long tstep)
 			if (source == NULL || source->c0 <= 0.0)
 			{
 				MSX.Dispersion.Aii[MSX.Dispersion.Row[n1]] += coelastseg * (1.0 - lastseg->uresponse);
-				if (isnan(MSX.Dispersion.Aii[MSX.Dispersion.Row[n1]]))
-					printf("NAN\n");
 				MSX.Dispersion.F[MSX.Dispersion.Row[n1]] += coelastseg * lastseg->hresponse;
 			}
 			else
