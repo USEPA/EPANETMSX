@@ -7,7 +7,7 @@
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
+**  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
 **  BUG FIXES  :   Bug ID 8,  Feng Shang, 01/29/2008
 *******************************************************************************/
@@ -66,7 +66,7 @@ static double *ChemC1;
 //  Exported functions
 //--------------------
 int    MSXchem_open(void);
-int    MSXchem_react(long dt);
+int    MSXchem_react(double dt);
 int    MSXchem_equil(int zone, double *c);
 char*  MSXchem_getVariableStr(int i, char *s);                                 //1.1.00
 void   MSXchem_close(void);
@@ -82,8 +82,8 @@ double MSXerr_validate(double x, int index, int element, int exprType);        /
 static void   setSpeciesChemistry(void);
 static void   setTankChemistry(void);
 static void   evalHydVariables(int k);
-static int    evalPipeReactions(int k, long dt);
-static int    evalTankReactions(int k, long dt);
+static int    evalPipeReactions(int k, double dt);
+static int    evalTankReactions(int k, double dt);
 static int    evalPipeEquil(double *c);
 static int    evalTankEquil(double *c);
 static void   evalPipeFormulas(double *c);
@@ -257,7 +257,7 @@ void MSXchem_close()
 
 //=============================================================================
 
-int MSXchem_react(long dt)
+int MSXchem_react(double dt)
 /*
 **  Purpose:
 **    computes reactions in all pipes and tanks.
@@ -548,8 +548,8 @@ void evalHydVariables(int k)
     else
     {
         dh = ABS(MSX.H[MSX.Link[k].n1] - MSX.H[MSX.Link[k].n2]);
-        HydVar[FRICTION] = 39.725*dh*pow(diam,5)/
-                           MSX.Link[k].len/SQR(MSX.Q[k]);
+        HydVar[FRICTION] = 39.725*dh*pow(diam,5.0)/
+                           MSX.Link[k].len/SQR((double)MSX.Q[k]);
     }
 
 // --- shear velocity in user's units (ft/sec or m/sec)
@@ -570,7 +570,7 @@ void evalHydVariables(int k)
 
 //=============================================================================
 
-int evalPipeReactions(int k, long dt)
+int evalPipeReactions(int k, double dt)
 /*
 **  Purpose:
 **    updates species concentrations in each WQ segment of a pipe
@@ -691,7 +691,7 @@ int evalPipeReactions(int k, long dt)
 
 //=============================================================================
 
-int evalTankReactions(int k, long dt)
+int evalTankReactions(int k, double dt)
 /*
 **  Purpose:
 **    updates species concentrations in a given storage tank

@@ -33,12 +33,12 @@ int dispersion_open()
 	int errcode=0;
 #pragma omp parallel
 	{
-		al = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
-		bl = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
-		cl = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
-		rl = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
-		sol = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
-		gam = (double*)calloc(MSX.Dispersion.MaxSegments + 2, sizeof(double));
+		al = (double*)calloc(MSX.MaxSegments + 2, sizeof(double));
+		bl = (double*)calloc(MSX.MaxSegments + 2, sizeof(double));
+		cl = (double*)calloc(MSX.MaxSegments + 2, sizeof(double));
+		rl = (double*)calloc(MSX.MaxSegments + 2, sizeof(double));
+		sol = (double*)calloc(MSX.MaxSegments + 2, sizeof(double));
+		gam = (double*)calloc(MSX.MaxSegments + 2, sizeof(double));
 		#pragma omp critical
 		{
 			ERRCODE(MEMCHECK(al));
@@ -68,7 +68,7 @@ int dispersion_close()
 	return errcode;
 }
 
-void dispersion_pipe(int m, long tstep)
+void dispersion_pipe(int m, double tstep)
 {
 
 	double cons = 0.0;
@@ -117,15 +117,23 @@ void dispersion_pipe(int m, long tstep)
 					ldispersion = 0.5 * diam * shearvelocity * (10.1 + 577 * pow(reynolds / 1000.0, -2.2));
 
 				}
-				else   //Basha 2007
+	/*			else   //Basha 2007
 				{
 					ldispersion = SQR(0.5 * diam * velocity) / (48 * d0);
 					elpt = MSX.Link[k].len / velocity;
 					ldispersion = ldispersion * (1 - exp(-12.425 * d0 * elpt / SQR(0.5 * diam)));
 					ldispersion += d0;
-					//		ldispersion = pow(velocity * diam / 2.0, 2) / (48 * d0);//Taylor
+				}*/
+				else  //Lee 2004 averaged
+				{ 
+					ldispersion = SQR(0.5 * diam * velocity) / (48 * d0);
+					elpt = MSX.Link[k].len / velocity;
+					double interv = 16.0 * d0 * elpt / (0.25 * diam * diam);
+					ldispersion = ldispersion * (1 - (1 - exp(-interv))/interv);
+					ldispersion += d0;
+
 				}
-				//	ldispersion = 147.25/10.0;
+			
 			}
 			else
 			{
@@ -145,7 +153,7 @@ void dispersion_pipe(int m, long tstep)
 				domi = ldispersion / (velocity * velocity * tstep);
 			else
 				domi = 1000;
-			if (domi >= 0.000 && MSX.Link[k].len*velocity/ldispersion < 1.0e6)  //Peclet numer
+			if (domi >= 0.000 && MSX.Link[k].len*velocity/ldispersion < MSX.Dispersion.PecletLimit)  //Peclet numer
 			{
 				MSX.Dispersion.pipeDispersionCoeff[k] = ldispersion;
 			}
@@ -249,7 +257,7 @@ void dispersion_pipe(int m, long tstep)
 	}
 }
 
-void solve_nodequal(int m, long tstep)
+void solve_nodequal(int m, double tstep)
 {
 
 	Pseg firstseg;
@@ -383,7 +391,7 @@ void solve_nodequal(int m, long tstep)
 }
 
 
-void   segqual_update(int m, long tstep)
+void   segqual_update(int m, double tstep)
 {
 
 	Pseg seg = NULL;

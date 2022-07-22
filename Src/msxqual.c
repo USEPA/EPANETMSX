@@ -7,7 +7,7 @@
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
+**  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
 ******************************************************************************/
 
@@ -49,7 +49,7 @@ const double Q_STAGNANT = 0.005 / GPMperCFS;     // 0.005 gpm = 1.114e-5 cfs
 //--------------------
 int    MSXchem_open(void);
 void   MSXchem_close(void);
-int    MSXchem_react(long dt);
+int    MSXchem_react(double dt);
 int    MSXchem_equil(int zone, double *c);
 
 extern void   MSXtank_mix1(int i, double vin, double *massin, double vnet);
@@ -69,7 +69,7 @@ char*  MSXerr_writeMathErrorMsg(void);                                         /
 //--------------------
 int    MSXqual_open(void);
 int    MSXqual_init(void);
-int    MSXqual_step(long *t, long *tleft);
+int    MSXqual_step(double *t, double *tleft);
 int    MSXqual_close(void);
 double MSXqual_getNodeQual(int j, int m);
 double MSXqual_getLinkQual(int k, int m);
@@ -82,22 +82,22 @@ void   MSXqual_reversesegs(int k);
 //  Local functions
 //-----------------
 static int    getHydVars(void);
-static int    transport(long tstep);
+static int    transport(double tstep);
 static void   initSegs(void);
 static int    flowdirchanged(void);
-static void   advectSegs(long dt);
-static void   getNewSegWallQual(int k, long dt, Pseg seg);
-static void   shiftSegWallQual(int k, long dt);
-static void   sourceInput(int n, double vout, long dt);
-static void   addSource(int n, Psource source, double v, long dt);
+static void   advectSegs(double dt);
+static void   getNewSegWallQual(int k, double dt, Pseg seg);
+static void   shiftSegWallQual(int k, double dt);
+static void   sourceInput(int n, double vout, double dt);
+static void   addSource(int n, Psource source, double v, double dt);
 static double getSourceQual(Psource source);
 static void   removeAllSegs(int k);
 
-static void topological_transport(long dt);
-static void findnodequal(int n, double volin, double* massin, double volout, long tstep);
+static void topological_transport(double dt);
+static void findnodequal(int n, double volin, double* massin, double volout, double tstep);
 static void noflowqual(int n);
-static void evalnodeinflow(int, long, double*, double*);
-static void evalnodeoutflow(int k, double* upnodequal, long tstep);
+static void evalnodeinflow(int, double, double*, double*);
+static void evalnodeoutflow(int k, double* upnodequal, double tstep);
 static int sortNodes();
 static int selectnonstacknode(int numsorted, int* indegree);
 static void findstoredmass(double* mass);
@@ -309,7 +309,7 @@ int  MSXqual_init()
 
 //=============================================================================
 
-int MSXqual_step(long *t, long *tleft)
+int MSXqual_step(double *t, double *tleft)
 /*
 **  Purpose:
 **    updates WQ conditions over a single WQ time step.
@@ -329,10 +329,10 @@ int MSXqual_step(long *t, long *tleft)
 **      513 = can't integrate reaction rates
 */
 {
-    long dt, hstep, tstep;
+    double hstep;
     int  k, errcode = 0, flowchanged;
     int m;
-    double smassin, smassout, sreacted;
+    double smassin, smassout, sreacted, tstep, dt;
 // --- set the shared memory pool to the water quality pool
 //     and the overall time step to nominal WQ time step
 
@@ -412,9 +412,10 @@ int MSXqual_step(long *t, long *tleft)
 
 // --- if there's no time remaining, then save the final records to output file
 
-    findstoredmass(MSX.MassBalance.final);
-    if (*t % 3600 == 0)
+
+/*    if (*t % 3600 == 0)
     {
+        findstoredmass(MSX.MassBalance.final);
         for (m = 1; m <= MSX.Nobjects[SPECIES]; m++)
         {
             sreacted = 0.0;
@@ -436,9 +437,10 @@ int MSXqual_step(long *t, long *tleft)
             else
                 MSX.MassBalance.ratio[m] = smassout / smassin;
         }
-    }
+    }*/
     if ( *tleft <= 0 && MSX.Saveflag )
     {   
+        findstoredmass(MSX.MassBalance.final);
         for (m = 1; m <= MSX.Nobjects[SPECIES]; m++)
         {
             sreacted = 0.0;
@@ -598,7 +600,7 @@ int  MSXqual_isSame(double c1[], double c2[])
     int m;
     for (m=1; m<=MSX.Nobjects[SPECIES]; m++)
     {
-        if ( fabs(c1[m] - c2[m]) >= MSX.Species[m].aTol ) return 0;
+        if (fabs(c1[m] - c2[m]) >= MSX.Species[m].aTol ) return 0;
     }
     return 1;
 }
@@ -660,7 +662,7 @@ int  getHydVars()
 
 // --- update elapsed time until next hydraulic event
 
-    MSX.Htime = hydtime + hydstep;
+    MSX.Htime = (double)hydtime + (double)hydstep;
 
 /*
     if (MSX.Qtime < MSX.Dur)
@@ -679,7 +681,7 @@ int  getHydVars()
 
 //=============================================================================
 
-int  transport(long tstep)
+int  transport(double tstep)
 /*
 **  Purpose:
 **    transports constituent mass through pipe network
@@ -692,7 +694,7 @@ int  transport(long tstep)
 **    an error code or 0 if no error.
 */
 {
-    long qtime, dt;
+    double qtime, dt;
     int  errcode = 0;
 
 // --- repeat until time step is exhausted
@@ -773,7 +775,7 @@ void  initSegs()
         v = LINKVOL(k);
         if (v > 0.0)
         {
-            int ninitsegs = MIN(100, MSX.Dispersion.MaxSegments);
+            int ninitsegs = MIN(100, MSX.MaxSegments);
             for (int ns = 0; ns < ninitsegs; ns++)
                 MSXqual_addSeg(k, MSXqual_getFreeSeg(v / (1.0*ninitsegs), MSX.C1));
         }
@@ -865,7 +867,7 @@ int  flowdirchanged()
 
 //=============================================================================
 
-void advectSegs(long dt)
+void advectSegs(double dt)
 /*
 **   Purpose:
 **     advects WQ segments within each pipe.
@@ -907,7 +909,7 @@ void advectSegs(long dt)
 
 //=============================================================================
 
-void getNewSegWallQual(int k, long dt, Pseg newseg)
+void getNewSegWallQual(int k, double dt, Pseg newseg)
 /*
 **  Purpose:
 **     computes wall species concentrations for a new WQ segment that
@@ -983,7 +985,7 @@ void getNewSegWallQual(int k, long dt, Pseg newseg)
 
 //=============================================================================
 
-void shiftSegWallQual(int k, long dt)
+void shiftSegWallQual(int k, double dt)
 /*
 **  Purpose:
 **    recomputes wall species concentrations in segments that remain
@@ -1065,7 +1067,7 @@ void shiftSegWallQual(int k, long dt)
 
 //=============================================================================
 
-void sourceInput(int n, double volout, long dt)
+void sourceInput(int n, double volout, double dt)
 /*
 **  Purpose:
 **    computes contribution (if any) of mass additions from WQ
@@ -1116,7 +1118,7 @@ void sourceInput(int n, double volout, long dt)
 
 //=============================================================================
 
-void addSource(int n, Psource source, double volout, long dt)
+void addSource(int n, Psource source, double volout, double dt)
 /*
 **  Purpose:
 **    updates concentration of particular species leaving a node
@@ -1210,7 +1212,7 @@ double  getSourceQual(Psource source)
 // --- apply time pattern if assigned
     i = source->pat;
     if (i == 0) return(c);
-    k = ((MSX.Qtime + MSX.Pstart) / MSX.Pstep) % MSX.Pattern[i].length;
+    k = (int)((ceil(MSX.Qtime) + MSX.Pstart) / MSX.Pstep) % MSX.Pattern[i].length;
     if (k != MSX.Pattern[i].interval)
     {
         if ( k < MSX.Pattern[i].interval )
@@ -1252,7 +1254,7 @@ void  removeAllSegs(int k)
         MSX.Link[k].nsegs =  0;
 }
 
-void topological_transport(long dt)
+void topological_transport(double dt)
 {
     int j, n, k, m;
     double volin, volout;
@@ -1318,8 +1320,8 @@ void topological_transport(long dt)
 
     }
     /*Advection-Reaction Done, Dispersion Starts*/
-    //1. Green functions of each pipe
-    //2. Compose the nodal 
+    //1. Linear relationship for each pipe
+    //2. Compose the nodal equations
     //3. Solve the matrix to update nodal concentration
     //4. Update segment concentration
     for (int m = 1; m <= MSX.Nobjects[SPECIES]; m++)
@@ -1334,7 +1336,7 @@ void topological_transport(long dt)
 }
 
 
-void evalnodeoutflow(int k, double * upnodequal, long tstep)
+void evalnodeoutflow(int k, double * upnodequal, double tstep)
 /*
 **--------------------------------------------------------------
 **   Input:   k = link index
@@ -1368,14 +1370,16 @@ void evalnodeoutflow(int k, double * upnodequal, long tstep)
 
     if (seg)
     {
-        if (!MSXqual_isSame(seg->c, upnodequal))
+        if (!MSXqual_isSame(seg->c, upnodequal) && MSX.Link[k].nsegs < MSX.MaxSegments)
         {
-            if (MSX.DispersionFlag == 1 && MSX.Link[k].nsegs < MSX.Dispersion.MaxSegments)
-                useNewSeg = 1;
-            else
-                useNewSeg = 0;    
+            useNewSeg = 1;
         }
+        else
+            useNewSeg = 0;
 
+//        if (MSX.DispersionFlag == 1 && MSX.Link[k].nsegs >= MSX.MaxSegments)
+//            useNewSeg = 0;
+ 
         if (useNewSeg == 0)
         {
             for (m = 1; m <= MSX.Nobjects[SPECIES]; m++)
@@ -1407,7 +1411,7 @@ void evalnodeoutflow(int k, double * upnodequal, long tstep)
 }
 
 
-void  evalnodeinflow(int k, long tstep, double* volin, double* massin)
+void  evalnodeinflow(int k, double tstep, double* volin, double* massin)
     /*
     **--------------------------------------------------------------
     **   Input:   k = link index
@@ -1454,6 +1458,7 @@ void  evalnodeinflow(int k, long tstep, double* volin, double* massin)
         {
             // ... replace this leading segment with the one behind it
             MSX.FirstSeg[k] = seg->prev;
+            MSX.Link[k].nsegs--;
             if (MSX.FirstSeg[k] == NULL) MSX.LastSeg[k] = NULL;
 
             // ... recycle the used up segment
@@ -1467,7 +1472,7 @@ void  evalnodeinflow(int k, long tstep, double* volin, double* massin)
 }
 
 
-void findnodequal(int n, double volin, double* massin, double volout, long tstep)
+void findnodequal(int n, double volin, double* massin, double volout, double tstep)
     /*
     **--------------------------------------------------------------
     **   Input:   n = node index

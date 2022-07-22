@@ -8,7 +8,7 @@
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
+**  VERSION:       2.2.00
 **  LAST UPDATE:   04/14/2021
 **  BUG FIX: Bug ID 08 Feng Shang 01/07/08
 ******************************************************************************/
@@ -37,7 +37,7 @@ static char *Logo[] =
      "*                      E P A N E T  -  M S X                     *",
      "*                   Multi-Species Water Quality                  *",
      "*                   Analysis for Pipe  Networks                  *",
-     "*                           Version 1.1                          *",     //1.1.00
+     "*                           Version 2.0.0                        *",     //2.0.00
      "******************************************************************"};
 
 static char PageHdr[] = "  Page %d                                    ";
@@ -330,7 +330,7 @@ void  newPage()
     char  s[MAXLINE+1];
     LineNum = 1;
     sprintf(s,
-            "\nPage %-3d                                             EPANET-MSX 1.1",   //1.1.00
+            "\nPage %-3d                                             EPANET-MSX 2.0.0",   //2.2.0
             PageNum);
     writeLine(s);
     writeLine("");
@@ -370,17 +370,17 @@ void writemassbalance()
             continue;
         
         snprintf(s1, MAXMSG, "\n");
-
+        writeLine(s1);
         snprintf(s1, MAXMSG, "Water Quality Mass Balance: %s (%s)", MSX.Species[m].id, MSX.Species[m].units);
         writeLine(s1);
         snprintf(s1, MAXMSG, "================================");
         writeLine(s1);
         snprintf(s1, MAXMSG, "Initial Mass:      %12.5e", MSX.MassBalance.initial[m]);
         writeLine(s1);
-        snprintf(s1, MAXMSG, "Mass Inflow:       %12.5e", MSX.MassBalance.inflow[m]);
+        snprintf(s1, MAXMSG, "Mass Inflow:       %12.5e", MSX.MassBalance.inflow[m]+ MSX.MassBalance.indisperse[m]);
         writeLine(s1);
-        snprintf(s1, MAXMSG, "Mass Dispersed Inflow:       %12.5e", MSX.MassBalance.indisperse[m]);
-        writeLine(s1);
+    //    snprintf(s1, MAXMSG, "Mass Dispersed Inflow:       %12.5e", MSX.MassBalance.indisperse[m]);
+    //    writeLine(s1);
         snprintf(s1, MAXMSG, "Mass Outflow:      %12.5e", MSX.MassBalance.outflow[m]);
         writeLine(s1);
         snprintf(s1, MAXMSG, "Mass Reacted:      %12.5e", MSX.MassBalance.reacted[m]);

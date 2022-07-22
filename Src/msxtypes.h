@@ -8,7 +8,7 @@
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
+**  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
 **  Bug Fix:       Bug ID 08, Feng Shang, 01/07/08 
 **                 Bug ID 09 (add roughness as hydraulic variable) Feng Shang 01/29/2008
@@ -55,7 +55,7 @@ typedef  float REAL4;
 //  Defined Constants
 //-----------------------------------------------------------------------------
 #define   MAGICNUMBER  516114521
-#define   VERSION      100000
+#define   VERSION      200000
 #define   MAXMSG       1024            // Max. # characters in message text
 #define   MAXLINE      1024            // Max. # characters in input line
 #define   TRUE         1
@@ -208,7 +208,8 @@ typedef  float REAL4;
                   RTOL_OPTION,
                   ATOL_OPTION,
 				  COMPILER_OPTION,
-                  MAXSEGMENT_OPTION};                                            //1.1.00
+                  MAXSEGMENT_OPTION,
+                  PECLETNUMER_OPTION};                                            //1.1.00
 
  enum CompilerType                     // C compiler type                      //1.1.00
                  {NO_COMPILER,
@@ -429,10 +430,11 @@ typedef struct                 // Mass Balance Components
 
 typedef struct
 {
-    int   MaxSegments;                  //maximum number of segments in a link  
+   
     double viscosity;
     double DIFFUS;                      // Diffusivity of chlorine 1.3E-8  @ 20 deg C (sq ft/sec)                                     
-         
+    double PecletLimit;                 // The Pectlet number below which the dispersion in a pipe is considered
+
     int* Order;          // Node-to-row of re-ordered matrix
     int* Row;            // Row-to-node of re-ordered matrix
     int* Ndx;            // Index of link's coeff. in Aij
@@ -489,18 +491,22 @@ typedef struct                         // MSX PROJECT VARIABLES
           ErrCode,                     // Error code
           ProjectOpened,               // Project opened flag
           QualityOpened;               // Water quality system opened flag
-
+   int   MaxSegments;                  //maximum number of segments in a link  
    long   HydOffset,                   // Hydraulics file byte offset
-          Qstep,                       // Quality time step (sec)
+   //       Qstep,                       // Quality time step (sec)
           Pstep,                       // Time pattern time step (sec)
           Pstart,                      // Starting pattern time (sec)
           Rstep,                       // Reporting time step (sec)
           Rstart,                      // Time when reporting starts
           Rtime,                       // Next reporting time (sec)
-          Htime,                       // Current hydraulic time (sec)
-          Qtime,                       // Current quality time (sec)
+   //       Htime,                       // Current hydraulic time (sec)
+   //       Qtime,                       // Current quality time (sec)
           Statflag,                    // Reporting statistic flag
           Dur;                         // Duration of simulation (sec)
+
+   double Qstep,                        //Quality time step (sec) double type MSX 2.0.0 
+          Htime,                       // Current hydraulic time (sec)  double type MSX 2.0.0 
+          Qtime;                        // Current quality time (sec) double type MSX 2.0.0
 
    REAL4  *D,                          // Node demands
           *H,                          // Node heads

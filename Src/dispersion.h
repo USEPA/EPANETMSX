@@ -16,7 +16,7 @@ typedef enum {
 
 int dispersion_open();
 int dispersion_close();
-void	dispersion_pipe(int m, long tstep);			//effective dispersion coefficient and upstream/downstream node impact calculation
-void    solve_nodequal(int m, long tstep);			//solve nodal concentration
-void    segqual_update(int m, long tstep);			//update pipe segment concentration
+void	dispersion_pipe(int m, double tstep);			//effective dispersion coefficient and upstream/downstream node impact calculation
+void    solve_nodequal(int m, double tstep);			//solve nodal concentration
+void    segqual_update(int m, double tstep);			//update pipe segment concentration
 void	tridiag(int n, double *a, double *b, double *c, double *r, double *y);

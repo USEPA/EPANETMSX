@@ -60,7 +60,7 @@ int  DLLEXPORT MSXsolveH(void);
 int  DLLEXPORT MSXusehydfile(char *fname);
 int  DLLEXPORT MSXsolveQ(void);
 int  DLLEXPORT MSXinit(int saveFlag);
-int  DLLEXPORT MSXstep(long *t, long *tleft);
+int  DLLEXPORT MSXstep(double *t, double *tleft);
 int  DLLEXPORT MSXsaveoutfile(char *fname);
 int  DLLEXPORT MSXsavemsxfile(char *fname);
 int  DLLEXPORT MSXreport(void);

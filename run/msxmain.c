@@ -31,7 +31,7 @@
 #include <float.h>
 #include "epanet2.h"                   // EPANET toolkit header file
 #include "epanetmsx.h"                 // EPANET-MSX toolkit header file
-
+#include <math.h>
 int main(int argc, char *argv[])
 /*
 **  Purpose:
@@ -55,8 +55,8 @@ int main(int argc, char *argv[])
 */
 {
     int    err, done = 1;
-    long   t, tleft;
-    long   oldHour, newHour;
+    double   t, tleft;
+    double   oldHour, newHour;
 	char *inpFile, *repFile, *outFile;
  
 
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 	}
 // --- open EPANET file
 
-    printf("\n... EPANET-MSX Version 1.1\n");                                  //1.1.00
+    printf("\n... EPANET-MSX Version 2.0.0\n");                                  //1.1.00
     printf("\n  o Processing EPANET input file");
     err = ENopen(inpFile, repFile, outFile);
     do
@@ -131,11 +131,11 @@ int main(int argc, char *argv[])
         {
             if ( oldHour != newHour )
             {
-                printf("\r  o Computing water quality at hour %-4d", newHour);
+                printf("\r  o Computing water quality at hour %-4f", newHour);
                 oldHour = newHour;
             }
             err = MSXstep(&t, &tleft);
-            newHour = t / 3600;
+            newHour = (t / 3600.0);
 
         } while (!err && tleft > 0);
         if (err)
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
             break;
         }
         else 
-            printf("\r  o Computing water quality at hour %-4d", t/3600);
+            printf("\r  o Computing water quality at hour %-4f", (t/3600.0));
 
     // --- report results
 

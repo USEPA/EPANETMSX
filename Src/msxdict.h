@@ -8,7 +8,7 @@
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00                                               
+**  VERSION:       2.0.00                                               
 **  LAST UPDATE:   09/29/08
 **  Bug FIX:       Bug ID 11, Feng Shang, 01/10/2008
 				   BUG ID 8 (add roughness as hydraulic variable),  Feng Shang, 01/29/2008 
@@ -22,7 +22,7 @@ static char *MsxSectWords[] = {"[TITLE", "[SPECIE",  "[COEFF",  "[TERM",
                                "[REPORT", "[DISPER", NULL};
 static char *ReportWords[]  = {"NODE", "LINK", "SPECIE", "FILE", "PAGESIZE", NULL};
 static char *OptionTypeWords[] = {"AREA_UNITS", "RATE_UNITS", "SOLVER", "COUPLING",
-                                  "TIMESTEP", "RTOL", "ATOL", "COMPILER", "SEGMENTS",NULL};  //1.1.00
+                                  "TIMESTEP", "RTOL", "ATOL", "COMPILER", "SEGMENTS","PECLET",NULL};  //1.1.00
 static char *CompilerWords[]   = {"NONE", "VC", "GC", NULL};                      //1.1.00
 static char *SourceTypeWords[] = {"CONC", "MASS", "SETPOINT", "FLOW", NULL};      //(FS-01/10/2008 To fix bug 11)
 static char *MixingTypeWords[] = {"MIXED", "2COMP", "FIFO", "LIFO", NULL};

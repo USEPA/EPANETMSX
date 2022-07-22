@@ -2,7 +2,7 @@
 *******************************************************************
 Modified from:
 
-SMATRIX.C -- Sparse matrix routines for EPANET program, VERSION:    2.00.      
+SMATRIX.C -- Sparse matrix routines for EPANET program, VERSION:    2.0.0.      
                                                                    
 
 DATE:       5/8/00

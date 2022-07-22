@@ -8,7 +8,7 @@
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
+**  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
 **  Bug fix:       Bug ID 08, Feng Shang 01/07/2008
 **                 Memory leak fixed, T. Taxon - 9/7/10
@@ -328,7 +328,7 @@ void setDefaults()
     MSX.Compiler = NO_COMPILER;                                                //1.1.00
     MSX.AreaUnits = FT2;
     MSX.RateUnits = DAYS;
-    MSX.Qstep = 300;
+    MSX.Qstep = 300.0;
     MSX.Rstep = 3600;
     MSX.Rstart = 0;
     MSX.Dur = 0;
@@ -527,7 +527,8 @@ int createObjects()
 
     for (i=1; i<=MSX.Nobjects[TERM]; i++) MSX.Term[i].expr = NULL;
 
-    MSX.Dispersion.MaxSegments = MAXSEGMENTS;
+    MSX.MaxSegments = MAXSEGMENTS;
+    MSX.Dispersion.PecletLimit = 1000.00;
     MSX.Dispersion.DIFFUS = 1.29E-8;
     MSX.Dispersion.md = (double*)
         calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));

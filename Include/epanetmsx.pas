@@ -31,7 +31,7 @@ function MSXsolveH: Integer; stdcall;
 function MSXusehydfile(fname: PChar): Integer; stdcall;
 function MSXsolveQ: Integer; stdcall;
 function MSXinit(saveFlag: Integer): Integer; stdcall;
-function MSXstep(var t: Longint; var tleft: Longint): Integer; stdcall;
+function MSXstep(var t: Double; var tleft: Double): Integer; stdcall;
 function MSXsaveoutfile(fname: Pchar): Integer; stdcall;
 function MSXsavemsxfile(fname: Pchar): Integer; stdcall;
 function MSXreport: Integer; stdcall;

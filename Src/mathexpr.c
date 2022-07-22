@@ -6,7 +6,7 @@
 **                 operators.
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **                 F. Shang, University of Cincinnati
-**  VERSION:       1.1.00
+**  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
 **  BUG FIXES:     Problems related to '^' operator (L.Rossman, 11/03/10)
 ******************************************************************************/

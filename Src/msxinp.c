@@ -8,7 +8,7 @@
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
+**  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
 **  BUG FIX:	   BUG ID 09 (add roughness as a hydraulic variable) Feng Shang 01/29/2008	
 *******************************************************************************/
@@ -219,6 +219,7 @@ int MSXinp_readNetData()
     int   errcode = 0;
 	int   i, k, n, t = 0;
     int   n1 = 0, n2 = 0;
+    long  qstep;
     float diam = 0.0, len = 0.0, v0 = 0.0, xmix = 0.0, vmix = 0.0;
 
 	float roughness = 0.0;   /*Feng Shang, Bug ID 8,  01/29/2008*/
@@ -227,7 +228,8 @@ int MSXinp_readNetData()
     CALL(errcode, ENgetflowunits(&MSX.Flowflag));
     if ( MSX.Flowflag >= EN_LPS ) MSX.Unitsflag = SI;
     else                          MSX.Unitsflag = US;
-    CALL(errcode, ENgettimeparam(EN_QUALSTEP, &MSX.Qstep));
+    CALL(errcode, ENgettimeparam(EN_QUALSTEP, &qstep));
+    MSX.Qstep = (double)qstep;
     CALL(errcode, ENgettimeparam(EN_REPORTSTEP, &MSX.Rstep));
     CALL(errcode, ENgettimeparam(EN_REPORTSTART, &MSX.Rstart));
     CALL(errcode, ENgettimeparam(EN_PATTERNSTEP, &MSX.Pstep));
@@ -652,7 +654,7 @@ int parseOption()
 */
 {
     int k;
-
+    double v;
 // --- determine which option is being read
 
     if ( Ntokens < 2 ) return 0;
@@ -688,9 +690,9 @@ int parseOption()
 		  break;
 
       case TIMESTEP_OPTION:
-          k = atoi(Tok[1]);
-          if ( k <= 0 ) return ERR_NUMBER;
-          MSX.Qstep = k;
+          v = atof(Tok[1]);
+          if ( v <= 0 ) return ERR_NUMBER;
+          MSX.Qstep = v;
           break;
 
       case RTOL_OPTION:
@@ -705,12 +707,19 @@ int parseOption()
           k = MSXutils_findmatch(Tok[1], CompilerWords);
           if ( k < 0 ) return ERR_KEYWORD;
     	  MSX.Compiler = k;
-	  break;
+          break;
+
+      case PECLETNUMER_OPTION:
+          v = atof(Tok[1]);
+          if (v <= 0.0)return ERR_NUMBER;
+          MSX.Dispersion.PecletLimit = MAX(v, 1.0);
+          break;
 
       case MAXSEGMENT_OPTION:
           k = atoi(Tok[1]);
           if (k <= 0) return ERR_NUMBER;
-          MSX.Dispersion.MaxSegments = MAX(k, 50);  //at least 50 segments
+          MSX.MaxSegments = MAX(k, 50);  //at least 50 segments
+
     }
     return 0;
 }

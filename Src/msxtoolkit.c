@@ -8,7 +8,7 @@
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
+**  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
 **  BUG FIXES:     BUG ID 22. MSXsetpattern, Feng Shang, 04/17/2008
 **                 File mode bug in MSXsolveH & MSXusehydfile, L. Rossman 10/05/2008
@@ -48,7 +48,7 @@ char * MSXproj_findID(int type, char *id);
 char * MSXproj_getErrmsg(int errcode);
 int    MSXqual_open(void);
 int    MSXqual_init(void);
-int    MSXqual_step(long *t, long *tleft);
+int    MSXqual_step(double *t, double *tleft);
 int    MSXqual_close(void);
 double MSXqual_getNodeQual(int j, int m);
 double MSXqual_getLinkQual(int k, int m);
@@ -194,7 +194,7 @@ int  DLLEXPORT  MSXsolveQ()
 **    an error code (or 0 for no error).
 */
 {
-    long t, tleft = 0;
+    double t, tleft = 0;
     int err = 0;
     if ( !MSX.ProjectOpened ) return ERR_MSX_NOT_OPENED;
     CALL(err, MSXinit(1));
@@ -226,7 +226,7 @@ int  DLLEXPORT  MSXinit(int saveFlag)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXstep(long *t, long *tleft)
+int  DLLEXPORT  MSXstep(double *t, double *tleft)
 /*
 **  Purpose:
 **    advances the WQ simulation over a single time step.
