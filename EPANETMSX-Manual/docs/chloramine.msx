@@ -1,0 +1,51 @@
+[OPTIONS]
+AREA_UNITS  CM2
+RATE_UNITS  HR
+SOLVER      RK5
+TIMESTEP    300
+
+[SPECIES]
+BULK   CL2   MG          ;chlorine
+BULK   S     MG          ;organic substrate
+BULK   Xb    UG          ;mass of free bacteria
+WALL   Xa    UG          ;mass of attached bacteria
+BULK   Nb    log(N)      ;number of free bacteria
+WALL   Na    log(N)      ;number of attached bacteria
+
+[COEFFICIENTS]
+CONSTANT  Kb      0.05   ;CL2 decay constant (1/hr)
+CONSTANT  CL2C    0.20   ;characteristic CL2 (mg/L)
+CONSTANT  CL2Tb   0.03   ;threshold CL2 for Xb (mg/L)
+CONSTANT  CL2Ta   0.10   ;threshold CL2 for Xa (mg/L)
+CONSTANT  MUMAXb  0.20   ;max. growth rate for Xb (1/hr)
+CONSTANT  MUMAXa  0.20   ;max. growth rate for Xa (1/hr)
+CONSTANT  Ks      0.40   ;half saturation constant (mg/L)
+CONSTANT  Kdet    0.03   ;detachment rate constant (1/hr/(ft/s))
+CONSTANT  Kdep    0.08   ;deposition rate constant (1/hr)
+CONSTANT  Kd      0.06   ;bacterial decay constant (1/hr)
+CONSTANT  Yg      0.15   ;bacterial yield coefficient (mg/mg)
+
+[TERMS]
+Ib   EXP(-STEP(CL2-CL2Tb)*(CL2-CL2Tb)/CL2C) ;Xb inhibition coeff. 
+Ia   EXP(-STEP(CL2-CL2Ta)*(CL2-CL2Ta)/CL2C) ;Xa inhibition coeff.
+MUb  MUMAXb*S/(S+Ks)*Ib                     ;Xb growth rate coeff.
+MUa  MUMAXa*S/(S+Ks)*Ia                     ;Xa growth rate coeff.
+
+[PIPES]
+RATE    CL2    -Kb*CL2
+RATE    S      -(MUa*Xa*Av + MUb*Xb)/Yg/1000
+RATE    Xb     (MUb-Kd)*Xb + Kdet*Xa*U*Av - Kdep*Xb
+RATE    Xa     (MUa-Kd)*Xa - Kdet*Xa*U + Kdep*Xb/Av
+FORMULA Nb     LOG10(1.0e6*Xb)
+FORMULA Na     LOG10(1.0e6*Xa)
+
+[TANKS]
+RATE    CL2    -Kb*CL2
+RATE    S      -MUb*Xb/Yg/1000
+RATE    Xb     (MUb-Kd)*Xb
+FORMULA Nb     LOG10(1.0e6*Xb)
+
+[SOURCES]
+CONCEN  SrcNode  CL2  1.2
+CONCEN  SrcNode  S    0.4
+CONCEN  SrcNode  Xb   0.01

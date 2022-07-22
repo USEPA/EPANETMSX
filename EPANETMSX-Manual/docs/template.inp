@@ -1,0 +1,57 @@
+[TITLE]
+  <title line>
+
+[OPTIONS]
+ AREA_UNITS  FT2/M2/CM2
+ TIME_UNITS  SEC/MIN/HR/DAY
+ SOLVER      EUL/RK5/ROS2
+ COUPLING    FULL/NONE	
+ TIMESTEP    <seconds>
+ ATOL        <value>
+ RTOL        <value>
+ COMPILER    VC/GC/NONE
+ SEGMENTS    <value>
+ PECLET      <value>
+
+[SPECIES]
+ BULK        <specieID>    <units>    (<atol>  <rtol>)
+ WALL        <specieID>    <units>    (<atol>  <rtol>)
+
+[COEFFICIENTS]
+ PARAMETER   <paramID>     <value>
+ CONSTANT    <constID>     <value>
+
+[TERMS]
+ <termID>    <expression>
+
+[PIPES] or [TANKS]
+ EQUIL       <specieID>    <expression>
+ RATE        <specieID>    <expression>
+ FORMULA     <specieID>    <expression>
+
+[SOURCES]
+ <type>   <nodeID>    <specieID>    <strength>    (<patternID>)
+
+[QUALITY]
+ GLOBAL     <specieID>    <value>
+ NODE       <nodeID>      <bulkSpecieID>    <value>
+ LINK       <linkID>      <wallSpecieID>    <value>
+
+[PARAMETERS]
+ PIPE         <pipeID>  <paramID> <value>
+ TANK         <tankID>  <paramID> <value>
+
+[DISPERSION]
+ <specieID>   <value>
+
+[PATTERNS]
+ <patternID>  <multiplier>  <multiplier> ...
+
+[REPORT]
+ NODES      ALL
+ NODES      <node1ID>     <node2ID>  ...
+ LINKS      ALL
+ LINKS      <link1ID>     <link2ID>  ...
+ SPECIES    <speciesID>   YES/NO  (<precision>)
+ FILE       <filename>
+ PAGESIZE   <lines>
