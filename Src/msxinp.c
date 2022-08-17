@@ -102,7 +102,7 @@ static int    parseParameter(void);
 static int    parseSource(void);
 static int    parsePattern(void);
 static int    parseReport(void);
-static int    parseDispers(void);
+static int    parseDiffu(void);
 static int    getVariableCode(char *id);
 static int    getTokens(char *s);
 static void   writeInpErrMsg(int errcode, char *sect, char *line, int lineCount);
@@ -633,8 +633,8 @@ int parseLine(int sect, char *line)
       case s_REPORT:
         return parseReport();
 
-      case s_Disper:
-          return parseDispers();
+      case s_Diffu:
+          return parseDiffu();
     }
     return 0;
 }
@@ -1284,7 +1284,7 @@ int parseReport()
     return 0;
 }
 
-int parseDispers()
+int parseDiffu()
 /*
 **  Purpose:
 **    parses an input line containing molecular diffusivity data.

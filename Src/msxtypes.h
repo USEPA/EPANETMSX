@@ -234,7 +234,7 @@ typedef  float REAL4;
                   s_PATTERN,
                   s_OPTION,
                   s_REPORT,
-                  s_Disper,
+                  s_Diffu,
  };
 
  enum ErrorCodeType                    // Error codes (501-525)
