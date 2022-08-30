@@ -9,7 +9,7 @@
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
 **  VERSION:       2.0.00
-**  LAST UPDATE:   04/14/2021
+**  LAST UPDATE:   08/30/2022
 **  BUG FIXES:     BUG ID 22. MSXsetpattern, Feng Shang, 04/17/2008
 **                 File mode bug in MSXsolveH & MSXusehydfile, L. Rossman 10/05/2008
 **                 Possible unterminated string copy, L. Rossman 11/01/10
@@ -48,7 +48,7 @@ char * MSXproj_findID(int type, char *id);
 char * MSXproj_getErrmsg(int errcode);
 int    MSXqual_open(void);
 int    MSXqual_init(void);
-int    MSXqual_step(double *t, double *tleft);
+int    MSXqual_step(long *t, long *tleft);
 int    MSXqual_close(void);
 double MSXqual_getNodeQual(int j, int m);
 double MSXqual_getLinkQual(int k, int m);
@@ -57,7 +57,7 @@ int    MSXfile_save(FILE *f);
 
 //=============================================================================
 
-int  DLLEXPORT  MSXopen(char *fname)
+int  MSXDLLEXPORT  MSXopen(char *fname)
 /*
 **  Purpose:
 **    opens the EPANET-MSX toolkit system.
@@ -85,7 +85,7 @@ int  DLLEXPORT  MSXopen(char *fname)
 
 //=============================================================================
 
-int   DLLEXPORT  MSXsolveH()
+int   MSXDLLEXPORT  MSXsolveH()
 /*
 **  Purpose:
 **    solves for system hydraulics which are written to a temporary file.
@@ -127,7 +127,7 @@ int   DLLEXPORT  MSXsolveH()
 
 //=============================================================================
 
-int   DLLEXPORT  MSXusehydfile(char *fname)
+int   MSXDLLEXPORT  MSXusehydfile(char *fname)
 /*
 **  Purpose:
 **    registers a hydraulics solution file with the MSX system.
@@ -182,7 +182,7 @@ int   DLLEXPORT  MSXusehydfile(char *fname)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXsolveQ()
+int  MSXDLLEXPORT  MSXsolveQ()
 /*
 **  Purpose:
 **    runs a MSX water quality analysis over the entire simulation period.
@@ -194,7 +194,7 @@ int  DLLEXPORT  MSXsolveQ()
 **    an error code (or 0 for no error).
 */
 {
-    double t, tleft = 0;
+    long t, tleft = 0;
     int err = 0;
     if ( !MSX.ProjectOpened ) return ERR_MSX_NOT_OPENED;
     CALL(err, MSXinit(1));
@@ -205,7 +205,7 @@ int  DLLEXPORT  MSXsolveQ()
 
 //=============================================================================
 
-int  DLLEXPORT  MSXinit(int saveFlag)
+int  MSXDLLEXPORT  MSXinit(int saveFlag)
 /*
 **  Purpose:
 **    initializes a MSX water quality analysis.
@@ -226,7 +226,7 @@ int  DLLEXPORT  MSXinit(int saveFlag)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXstep(double *t, double *tleft)
+int  MSXDLLEXPORT  MSXstep(long *t, long *tleft)
 /*
 **  Purpose:
 **    advances the WQ simulation over a single time step.
@@ -248,7 +248,7 @@ int  DLLEXPORT  MSXstep(double *t, double *tleft)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXsaveoutfile(char *fname)
+int  MSXDLLEXPORT  MSXsaveoutfile(char *fname)
 /*
 **  Purpose:
 **    saves all results of the WQ simulation to a binary file.
@@ -274,7 +274,7 @@ int  DLLEXPORT  MSXsaveoutfile(char *fname)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXreport()
+int  MSXDLLEXPORT  MSXreport()
 /*
 **  Purpose:
 **    writes requested WQ simulation results to a text file.
@@ -298,7 +298,7 @@ int  DLLEXPORT  MSXreport()
 
 //=============================================================================
 
-int  DLLEXPORT  MSXclose()
+int  MSXDLLEXPORT  MSXclose()
 /*
 **  Purpose:
 **    closes the EPANET-MSX toolkit system.
@@ -317,7 +317,7 @@ int  DLLEXPORT  MSXclose()
 
 //=============================================================================
 
-int  DLLEXPORT  MSXgetindex(int type, char *id, int *index)
+int  MSXDLLEXPORT  MSXgetindex(int type, char *id, int *index)
 /*
 **  Purpose:
 **    retrieves the index of a named MSX object.
@@ -350,7 +350,7 @@ int  DLLEXPORT  MSXgetindex(int type, char *id, int *index)
 }
 //=============================================================================
 
-int  DLLEXPORT  MSXgetIDlen(int type, int index, int *len)
+int  MSXDLLEXPORT  MSXgetIDlen(int type, int index, int *len)
 /*
 **  Purpose:
 **    retrieves the number of characters in the ID name of an MSX object.
@@ -381,17 +381,17 @@ int  DLLEXPORT  MSXgetIDlen(int type, int index, int *len)
     if ( index < 1 || index > MSX.Nobjects[i] ) return ERR_INVALID_OBJECT_INDEX;
     switch(i)
     {
-        case SPECIES:   *len = strlen(MSX.Species[index].id); break;
-        case CONSTANT:  *len = strlen(MSX.Const[index].id);   break;
-        case PARAMETER: *len = strlen(MSX.Param[index].id);   break;
-        case PATTERN:   *len = strlen(MSX.Pattern[index].id); break;
+        case SPECIES:   *len = (int)strlen(MSX.Species[index].id); break;
+        case CONSTANT:  *len = (int)strlen(MSX.Const[index].id);   break;
+        case PARAMETER: *len = (int)strlen(MSX.Param[index].id);   break;
+        case PATTERN:   *len = (int)strlen(MSX.Pattern[index].id); break;
     }
     return 0;
 }
 
 //=============================================================================
 
-int  DLLEXPORT  MSXgetID(int type, int index, char *id, int len)
+int  MSXDLLEXPORT  MSXgetID(int type, int index, char *id, int len)
 /*
 **  Purpose:
 **    retrieves the name of an object given its index.
@@ -434,7 +434,7 @@ int  DLLEXPORT  MSXgetID(int type, int index, char *id, int len)
 
 //=============================================================================
 
-int DLLEXPORT  MSXgetcount(int type, int *count)
+int MSXDLLEXPORT  MSXgetcount(int type, int *count)
 /*
 **  Purpose:
 **    retrieves the number of objects of a specific type.
@@ -464,7 +464,7 @@ int DLLEXPORT  MSXgetcount(int type, int *count)
 
 //=============================================================================
 
-int DLLEXPORT  MSXgetspecies(int index, int *type, char *units,
+int MSXDLLEXPORT  MSXgetspecies(int index, int *type, char *units,
                              double *aTol, double * rTol)
 /*
 **  Purpose:
@@ -501,7 +501,7 @@ int DLLEXPORT  MSXgetspecies(int index, int *type, char *units,
 
 //=============================================================================
 
-int DLLEXPORT  MSXgetconstant(int index, double *value)
+int MSXDLLEXPORT  MSXgetconstant(int index, double *value)
 /*
 **  Purpose:
 **    retrieves the value of a particular reaction constant.
@@ -525,7 +525,7 @@ int DLLEXPORT  MSXgetconstant(int index, double *value)
 
 //=============================================================================
 
-int DLLEXPORT MSXgetparameter(int type, int index, int param, double *value)
+int MSXDLLEXPORT MSXgetparameter(int type, int index, int param, double *value)
 /*
 **  Purpose:
 **    retrieves the value of a particular reaction parameter for a given pipe
@@ -564,7 +564,7 @@ int DLLEXPORT MSXgetparameter(int type, int index, int param, double *value)
 
 //=============================================================================
 
-int  DLLEXPORT MSXgetsource(int node, int species, int *type, double *level,
+int  MSXDLLEXPORT MSXgetsource(int node, int species, int *type, double *level,
                             int *pat)
 /*
 **  Purpose:
@@ -614,7 +614,7 @@ int  DLLEXPORT MSXgetsource(int node, int species, int *type, double *level,
 
 //=============================================================================
 
-int  DLLEXPORT  MSXgetpatternlen(int pat, int *len)
+int  MSXDLLEXPORT  MSXgetpatternlen(int pat, int *len)
 /*
 **  Purpose:
 **    retrieves the number of time periods within a source time pattern.
@@ -638,7 +638,7 @@ int  DLLEXPORT  MSXgetpatternlen(int pat, int *len)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXgetpatternvalue(int pat, int period, double *value)
+int  MSXDLLEXPORT  MSXgetpatternvalue(int pat, int period, double *value)
 /*
 **  Purpose:
 **    retrieves the multiplier at a specific time period for a given
@@ -679,7 +679,7 @@ int  DLLEXPORT  MSXgetpatternvalue(int pat, int period, double *value)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXgetinitqual(int type, int index, int species, double *value)
+int  MSXDLLEXPORT  MSXgetinitqual(int type, int index, int species, double *value)
 /*
 **  Purpose:
 **    retrieves the initial concentration of a particular chemical species
@@ -716,7 +716,7 @@ int  DLLEXPORT  MSXgetinitqual(int type, int index, int species, double *value)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXgetqual(int type, int index, int species, double *value)
+int  MSXDLLEXPORT  MSXgetqual(int type, int index, int species, double *value)
 /*
 **  Purpose:
 **    retrieves the current concentration of a species at a particular node
@@ -753,7 +753,7 @@ int  DLLEXPORT  MSXgetqual(int type, int index, int species, double *value)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXgeterror(int code, char *msg, int len)
+int  MSXDLLEXPORT  MSXgeterror(int code, char *msg, int len)
 /*
 **  Purpose:
 **    retrieves text of an error message.
@@ -775,7 +775,7 @@ int  DLLEXPORT  MSXgeterror(int code, char *msg, int len)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXsetconstant(int index, double value)
+int  MSXDLLEXPORT  MSXsetconstant(int index, double value)
 /*
 **  Purpose:
 **    assigns a new value to a specific reaction constant.
@@ -799,7 +799,7 @@ int  DLLEXPORT  MSXsetconstant(int index, double value)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXsetparameter(int type, int index, int param, double value)
+int  MSXDLLEXPORT  MSXsetparameter(int type, int index, int param, double value)
 /*
 **  Purpose:
 **    assigns a value to a particular reaction parameter for a given pipe
@@ -838,7 +838,7 @@ int  DLLEXPORT  MSXsetparameter(int type, int index, int param, double value)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXsetinitqual(int type, int index, int species, double value)
+int  MSXDLLEXPORT  MSXsetinitqual(int type, int index, int species, double value)
 /*
 **  Purpose:
 **    assigns an initial concentration of a particular chemical species
@@ -876,7 +876,7 @@ int  DLLEXPORT  MSXsetinitqual(int type, int index, int species, double value)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXsetsource(int node, int species, int type, double level,
+int  MSXDLLEXPORT  MSXsetsource(int node, int species, int type, double level,
                              int pat)
 /*
 **  Purpose:
@@ -947,7 +947,7 @@ int  DLLEXPORT  MSXsetsource(int node, int species, int type, double level,
 
 //=============================================================================
 
-int  DLLEXPORT  MSXsetpatternvalue(int pat, int period, double value)
+int  MSXDLLEXPORT  MSXsetpatternvalue(int pat, int period, double value)
 /*
 **  Purpose:
 **    assigns a new value to the multiplier for a specific time period in
@@ -993,7 +993,7 @@ int  DLLEXPORT  MSXsetpatternvalue(int pat, int period, double value)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXaddpattern(char *id)
+int  MSXDLLEXPORT  MSXaddpattern(char *id)
 /*
 **  Purpose:
 **    adds a new MSX time pattern to the project.
@@ -1057,7 +1057,7 @@ int  DLLEXPORT  MSXaddpattern(char *id)
 
 //=============================================================================
 
-int  DLLEXPORT  MSXsetpattern(int pat, double mult[], int len)
+int  MSXDLLEXPORT  MSXsetpattern(int pat, double mult[], int len)
 /*
 **  Purpose:
 **    Assigns a new set of multipliers to a given time pattern.
@@ -1124,7 +1124,7 @@ int  DLLEXPORT  MSXsetpattern(int pat, double mult[], int len)
 
 //=============================================================================
 
-int  DLLEXPORT MSXsavemsxfile(char *fname)
+int  MSXDLLEXPORT MSXsavemsxfile(char *fname)
 {
     int errcode;
     FILE *f;

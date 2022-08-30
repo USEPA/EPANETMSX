@@ -8,7 +8,7 @@
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
 **  VERSION:       2.0.00
-**  LAST UPDATE:   04/14/2021
+**  LAST UPDATE:   08/30/2022
 ******************************************************************************/
 
 #include <stdio.h>
@@ -69,7 +69,7 @@ char*  MSXerr_writeMathErrorMsg(void);                                         /
 //--------------------
 int    MSXqual_open(void);
 int    MSXqual_init(void);
-int    MSXqual_step(double *t, double *tleft);
+int    MSXqual_step(long *t, long *tleft);
 int    MSXqual_close(void);
 double MSXqual_getNodeQual(int j, int m);
 double MSXqual_getLinkQual(int k, int m);
@@ -82,7 +82,7 @@ void   MSXqual_reversesegs(int k);
 //  Local functions
 //-----------------
 static int    getHydVars(void);
-static int    transport(double tstep);
+static int    transport(long tstep);
 static void   initSegs(void);
 static int    flowdirchanged(void);
 static void   advectSegs(double dt);
@@ -309,7 +309,7 @@ int  MSXqual_init()
 
 //=============================================================================
 
-int MSXqual_step(double *t, double *tleft)
+int MSXqual_step(long *t, long *tleft)
 /*
 **  Purpose:
 **    updates WQ conditions over a single WQ time step.
@@ -329,10 +329,11 @@ int MSXqual_step(double *t, double *tleft)
 **      513 = can't integrate reaction rates
 */
 {
-    double hstep;
     int  k, errcode = 0, flowchanged;
     int m;
-    double smassin, smassout, sreacted, tstep, dt;
+    double smassin, smassout, sreacted;
+    long   hstep, tstep, dt;
+    
 // --- set the shared memory pool to the water quality pool
 //     and the overall time step to nominal WQ time step
 
@@ -412,34 +413,8 @@ int MSXqual_step(double *t, double *tleft)
 
 // --- if there's no time remaining, then save the final records to output file
 
-
-/*    if (*t % 3600 == 0)
-    {
-        findstoredmass(MSX.MassBalance.final);
-        for (m = 1; m <= MSX.Nobjects[SPECIES]; m++)
-        {
-            sreacted = 0.0;
-            for (k = 1; k <= MSX.Nobjects[LINK]; k++)
-                sreacted += MSX.Link[k].reacted[m];
-            for (k = 1; k <= MSX.Nobjects[TANK]; k++)
-                sreacted += MSX.Tank[k].reacted[m];
-
-            MSX.MassBalance.reacted[m] = sreacted;
-            smassin = MSX.MassBalance.initial[m] + MSX.MassBalance.inflow[m]+MSX.MassBalance.indisperse[m];
-            smassout = MSX.MassBalance.outflow[m] + MSX.MassBalance.final[m];
-            if (sreacted < 0)  //loss
-                smassout -= sreacted;
-            else
-                smassin += sreacted;
-
-            if (smassin == 0)
-                MSX.MassBalance.ratio[m] = 1.0;
-            else
-                MSX.MassBalance.ratio[m] = smassout / smassin;
-        }
-    }*/
     if ( *tleft <= 0 && MSX.Saveflag )
-    {   
+    {
         findstoredmass(MSX.MassBalance.final);
         for (m = 1; m <= MSX.Nobjects[SPECIES]; m++)
         {
@@ -461,8 +436,6 @@ int MSXqual_step(double *t, double *tleft)
                 MSX.MassBalance.ratio[m] = 1.0;
             else
                 MSX.MassBalance.ratio[m] = smassout / smassin;
-
-      
         }
         CALL(errcode, MSXout_saveFinalResults());
     }
@@ -662,7 +635,7 @@ int  getHydVars()
 
 // --- update elapsed time until next hydraulic event
 
-    MSX.Htime = (double)hydtime + (double)hydstep;
+    MSX.Htime = hydtime + hydstep;
 
 /*
     if (MSX.Qtime < MSX.Dur)
@@ -681,7 +654,7 @@ int  getHydVars()
 
 //=============================================================================
 
-int  transport(double tstep)
+int  transport(long tstep)
 /*
 **  Purpose:
 **    transports constituent mass through pipe network
@@ -694,7 +667,7 @@ int  transport(double tstep)
 **    an error code or 0 if no error.
 */
 {
-    double qtime, dt;
+    long qtime, dt;
     int  errcode = 0;
 
 // --- repeat until time step is exhausted
@@ -1094,7 +1067,7 @@ void sourceInput(int n, double volout, double dt)
     if (source == NULL) return;
 
 
-    qout = volout / (double) dt;
+    qout = volout / dt;
 
     // --- evaluate source input only if node outflow > cutoff flow
     if (qout <= qcutoff) return;
@@ -1212,7 +1185,7 @@ double  getSourceQual(Psource source)
 // --- apply time pattern if assigned
     i = source->pat;
     if (i == 0) return(c);
-    k = (int)((ceil(MSX.Qtime) + MSX.Pstart) / MSX.Pstep) % MSX.Pattern[i].length;
+    k = (int)((MSX.Qtime + MSX.Pstart) / MSX.Pstep) % MSX.Pattern[i].length;
     if (k != MSX.Pattern[i].interval)
     {
         if ( k < MSX.Pattern[i].interval )

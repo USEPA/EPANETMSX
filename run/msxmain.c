@@ -7,8 +7,8 @@
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
-**  LAST UPDATE:   10/05/08
+**  VERSION:       2.0.00
+**  LAST UPDATE:   08/30/2022
 **
 **  EPANET-MSX is an extension of the EPANET program for modeling the fate
 **  and transport of multiple interacting chemical species within a water
@@ -55,9 +55,9 @@ int main(int argc, char *argv[])
 */
 {
     int    err, done = 1;
-    double   t, tleft;
-    double   oldHour, newHour;
-	char *inpFile, *repFile, *outFile;
+    long   t, tleft;
+    long   oldHour, newHour;
+    char   *inpFile, *repFile, *outFile;
  
 
 // --- check command line arguments
@@ -131,11 +131,11 @@ int main(int argc, char *argv[])
         {
             if ( oldHour != newHour )
             {
-                printf("\r  o Computing water quality at hour %-4f", newHour);
+                printf("\r  o Computing water quality at hour %d", newHour);
                 oldHour = newHour;
             }
             err = MSXstep(&t, &tleft);
-            newHour = (t / 3600.0);
+            newHour = (t / 3600);
 
         } while (!err && tleft > 0);
         if (err)
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
             break;
         }
         else 
-            printf("\r  o Computing water quality at hour %-4f", (t/3600.0));
+            printf("\r  o Computing water quality at hour %d", (t/3600));
 
     // --- report results
 

@@ -7,7 +7,7 @@
 **  AUTHORS:       L. Rossman, US EPA - NRMRL
 **                 F. Shang, University of Cincinnati
 **  VERSION:       2.0.00
-**  LAST UPDATE:   04/14/2021
+**  LAST UPDATE:   08/30/2022
 **  BUG FIXES:     Problems related to '^' operator (L.Rossman, 11/03/10)
 ******************************************************************************/
 /*
@@ -723,7 +723,7 @@ MathExpr * mathexpr_create(char *formula, int (*getVar) (char *))
     PrevLex = 0;
     CurLex = 0;
     S = formula;
-    Len = strlen(S);
+    Len = (int)strlen(S);
     Pos = 0;
     Bc = 0;
     tree = getTree();

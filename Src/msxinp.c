@@ -9,7 +9,7 @@
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
 **  VERSION:       2.0.00
-**  LAST UPDATE:   04/14/2021
+**  LAST UPDATE:   08/20/2022
 **  BUG FIX:	   BUG ID 09 (add roughness as a hydraulic variable) Feng Shang 01/29/2008	
 *******************************************************************************/
 
@@ -229,7 +229,7 @@ int MSXinp_readNetData()
     if ( MSX.Flowflag >= EN_LPS ) MSX.Unitsflag = SI;
     else                          MSX.Unitsflag = US;
     CALL(errcode, ENgettimeparam(EN_QUALSTEP, &qstep));
-    MSX.Qstep = (double)qstep;
+    MSX.Qstep = qstep;
     CALL(errcode, ENgettimeparam(EN_REPORTSTEP, &MSX.Rstep));
     CALL(errcode, ENgettimeparam(EN_REPORTSTART, &MSX.Rstart));
     CALL(errcode, ENgettimeparam(EN_PATTERNSTEP, &MSX.Pstep));
@@ -690,9 +690,9 @@ int parseOption()
 		  break;
 
       case TIMESTEP_OPTION:
-          v = atof(Tok[1]);
-          if ( v <= 0 ) return ERR_NUMBER;
-          MSX.Qstep = v;
+          k = atoi(Tok[1]);
+          if ( k <= 0 ) return ERR_NUMBER;
+          MSX.Qstep = k;
           break;
 
       case RTOL_OPTION:

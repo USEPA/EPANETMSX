@@ -9,7 +9,7 @@
 **                 F. Shang, University of Cincinnati
 **                 J. Uber, University of Cincinnati
 **  VERSION:       2.0.00
-**  LAST UPDATE:   04/14/2021
+**  LAST UPDATE:   08/30/2022
 **  Bug Fix:       Bug ID 08, Feng Shang, 01/07/08 
 **                 Bug ID 09 (add roughness as hydraulic variable) Feng Shang 01/29/2008
 ***********************************************************************/
@@ -493,20 +493,16 @@ typedef struct                         // MSX PROJECT VARIABLES
           QualityOpened;               // Water quality system opened flag
    int   MaxSegments;                  //maximum number of segments in a link  
    long   HydOffset,                   // Hydraulics file byte offset
-   //       Qstep,                       // Quality time step (sec)
+          Qstep,                       // Quality time step (sec)
           Pstep,                       // Time pattern time step (sec)
           Pstart,                      // Starting pattern time (sec)
           Rstep,                       // Reporting time step (sec)
           Rstart,                      // Time when reporting starts
           Rtime,                       // Next reporting time (sec)
-   //       Htime,                       // Current hydraulic time (sec)
-   //       Qtime,                       // Current quality time (sec)
+          Htime,                       // Current hydraulic time (sec)
+          Qtime,                       // Current quality time (sec)
           Statflag,                    // Reporting statistic flag
           Dur;                         // Duration of simulation (sec)
-
-   double Qstep,                        //Quality time step (sec) double type MSX 2.0.0 
-          Htime,                       // Current hydraulic time (sec)  double type MSX 2.0.0 
-          Qtime;                        // Current quality time (sec) double type MSX 2.0.0
 
    REAL4  *D,                          // Node demands
           *H,                          // Node heads
