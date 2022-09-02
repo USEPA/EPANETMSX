@@ -271,7 +271,7 @@ int getOperand()
       case '-': code = 4;
                 if (Pos < Len-1 &&
                     isDigit(S[Pos+1]) &&
-                    (CurLex == 0 || CurLex == 1))
+					(CurLex <= 6 || CurLex == 31))
                 {
                     Pos++;
                     Fvalue = -getNumber();
@@ -342,8 +342,10 @@ ExprTree * newNode()
 
 ExprTree * getSingleOp(int *lex)
 {
+    int bracket;
     int opcode;
     ExprTree *left;
+    ExprTree *right;
     ExprTree *node;
 
     /* --- open parenthesis, so continue to grow the tree */
