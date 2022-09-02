@@ -342,10 +342,8 @@ ExprTree * newNode()
 
 ExprTree * getSingleOp(int *lex)
 {
-    int bracket;
     int opcode;
     ExprTree *left;
-    ExprTree *right;
     ExprTree *node;
 
     /* --- open parenthesis, so continue to grow the tree */
