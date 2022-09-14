@@ -2,11 +2,9 @@
 **  MODULE:        MSXERR.C
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   Math error reporting routines.
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
 **  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
 ******************************************************************************/
@@ -108,7 +106,7 @@ double  MSXerr_validate(double x, int index, int element, int exprType)
 	else
 	{
 		sprintf(mathErrorMsg,
-		"Ilegal math operation occurred in %s %s expression for specie:\n  %s",
+		"Ilegal math operation occurred in %s %s expression for species:\n  %s",
 		elementTxt[element], exprTypeTxt[exprType], MSX.Species[index].id);
 	}
 

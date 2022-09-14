@@ -2,11 +2,9 @@
 **  MODULE:        MSXFILE.C
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   writes MSX project data to a MSX input file.
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
 **  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
 **  BUG FIX:       Bug ID 10, Feng Shang, 01/08/2008

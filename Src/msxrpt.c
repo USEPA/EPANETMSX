@@ -3,11 +3,9 @@
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   report writing routines for the EPANET Multi-Species
 **                 Extension toolkit.
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
 **  VERSION:       2.2.00
 **  LAST UPDATE:   04/14/2021
 **  BUG FIX: Bug ID 08 Feng Shang 01/07/08

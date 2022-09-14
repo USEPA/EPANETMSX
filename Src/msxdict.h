@@ -3,11 +3,9 @@
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   Dictionary of key words used by the
 **                 EPANET Multi-Species Extension toolkit.
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
 **  VERSION:       2.0.00                                               
 **  LAST UPDATE:   09/29/08
 **  Bug FIX:       Bug ID 11, Feng Shang, 01/10/2008

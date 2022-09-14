@@ -2,11 +2,9 @@
 **  MODULE:        MSXCHEM.C
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   Water quality chemistry functions.
-**  COPYRIGHT:     Copyright (C) 2006 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
 **  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
 **  BUG FIXES  :   Bug ID 8,  Feng Shang, 01/29/2008

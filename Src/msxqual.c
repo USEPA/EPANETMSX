@@ -2,11 +2,9 @@
 **  MODULE:        MSXQUAL.C
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   Water quality routing routines.
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
 **  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
 ******************************************************************************/
@@ -360,14 +358,14 @@ int MSXqual_step(double *t, double *tleft)
             MSX.Qtime += dt;
 
         // --- retrieve new hydraulic solution
-            if (MSX.Qtime == MSX.Htime)
+            if (MSX.Qtime >= MSX.Htime)
             {
                 CALL(errcode, getHydVars());
                 if (MSX.Qtime < MSX.Dur)
                 {
                     // --- initialize pipe segments (at time 0) or else re-orient segments
                     //     to accommodate any flow reversals
-                    if (MSX.Qtime == 0)
+                    if (MSX.Qtime == 0.0)
                     {
                         flowchanged = 1;
                         initSegs();
@@ -383,7 +381,7 @@ int MSXqual_step(double *t, double *tleft)
             }
 
         // --- report results if its time to do so
-            if (MSX.Saveflag && MSX.Qtime == MSX.Rtime)
+            if (MSX.Saveflag && MSX.Qtime >= (double)MSX.Rtime)
             {
                 CALL(errcode, MSXout_saveResults());
                 MSX.Rtime += MSX.Rstep;
@@ -408,7 +406,7 @@ int MSXqual_step(double *t, double *tleft)
 // --- update the current time into the simulation and the amount remaining
 
     *t = MSX.Qtime;
-    *tleft = MSX.Dur - MSX.Qtime;
+    *tleft = 1.0*MSX.Dur - MSX.Qtime;
 
 // --- if there's no time remaining, then save the final records to output file
 

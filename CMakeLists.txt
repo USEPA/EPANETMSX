@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.9)
 project(EPANETMSX LANGUAGES C)
 
 # Append local dir to module search path
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+#list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # Add building the command line executable from the run directory
 add_subdirectory(run)
 
@@ -28,7 +28,8 @@ IF (MSVC)
 ENDIF (MSVC)
 
 # configure file groups
-file(GLOB MSX_SOURCES RELATIVE ${PROJECT_SOURCE_DIR} src/*.c)
+file(GLOB MSX_SOURCES RELATIVE ${PROJECT_SOURCE_DIR} Src/*.c Src/*.h Include/epanet2.h Include/epanetmsx.h)
+list(REMOVE_ITEM MSX_SOURCES  Src/msxmain.c)
 
 # the shared library
 find_package(OpenMP REQUIRED)

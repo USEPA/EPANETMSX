@@ -4,9 +4,9 @@
  Version:      2.2
  Module:       epanet2.h
  Description:  declarations of the legacy style EPANET 2 API functions
- Authors:      see AUTHORS
- Copyright:    see AUTHORS
- License:      see LICENSE
+ Authors:      see EPANET AUTHORS
+ Copyright:    see EPANET AUTHORS
+ License:      see EPANET LICENSE
  Last Updated: 02/01/2020
  ******************************************************************************
  */
