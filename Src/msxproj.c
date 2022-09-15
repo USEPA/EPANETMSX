@@ -61,7 +61,7 @@ static char * Errmsg[] =
 
      "Error 522 - could not compile chemistry functions.",                     //1.1.00
      "Error 523 - could not load functions from compiled chemistry file.",     //1.1.00
-	 "Error 524 - illegal math operation."};                                   //1.1.00
+     "Error 524 - illegal math operation."};                                   //1.1.00
 
 //  Imported functions
 //--------------------
@@ -130,6 +130,7 @@ int  MSXproj_open(char *fname)
     CALL(errcode, createObjects());
 
     MSX.DispersionFlag = 0;   //no dispersion by default, unless yes in msx file
+
 // --- read in the EPANET and MSX object data
 
     CALL(errcode, MSXinp_readNetData());
@@ -150,13 +151,13 @@ int  MSXproj_open(char *fname)
 
         createsparse();   //symmetric matrix
     }
+
     // Build nodal adjacency lists 
     if (errcode == 0 && MSX.Adjlist == NULL)
     {
         errcode = buildadjlists();   //buildadjlists is 2.2, parallel links are included
         if (errcode) return errcode;
     }
-
 
 // --- close input file
 
@@ -328,7 +329,7 @@ void setDefaults()
     MSX.Compiler = NO_COMPILER;                                                //1.1.00
     MSX.AreaUnits = FT2;
     MSX.RateUnits = DAYS;
-    MSX.Qstep = 300;
+    MSX.Qstep = 300*1000;   // 300,000 millisec = 5 minutes
     MSX.Rstep = 3600;
     MSX.Rstart = 0;
     MSX.Dur = 0;

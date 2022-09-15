@@ -55,26 +55,26 @@ int main(int argc, char *argv[])
 */
 {
     int    err, done = 1;
-    long   t, tleft;
+    double t, tleft;
     long   oldHour, newHour;
     char   *inpFile, *repFile, *outFile;
- 
 
 // --- check command line arguments
 
     if ( argc < 4 || argc > 5 )
     {
-		printf("\nInvalid command line arguments:\n\n");
-        printf("usage: epanet_msx <inp_file> <msx_file> <report_file> [binary_output_file]\n");
+        printf("\nInvalid command line arguments:\n\n");
+        printf("usage: runepanetmsx <inp_file> <msx_file> <report_file> [binary_output_file]\n");
         return 0;
     }
-	inpFile=argv[1];
-	repFile=argv[3];
-	if(argc ==5) {
-		outFile=argv[4];
-	} else {
-		outFile="";
-	}
+    inpFile=argv[1];
+    repFile=argv[3];
+    if(argc ==5) {
+        outFile=argv[4];
+    } else {
+        outFile="";
+    }
+
 // --- open EPANET file
 
     printf("\n... EPANET-MSX Version 2.0.0\n");                                  //1.1.00
@@ -88,8 +88,6 @@ int main(int argc, char *argv[])
             ENclose();
             return err;
         }
-
-
 
     // --- open the MSX input file
 
@@ -135,7 +133,7 @@ int main(int argc, char *argv[])
                 oldHour = newHour;
             }
             err = MSXstep(&t, &tleft);
-            newHour = (t / 3600);
+            newHour = (long)(t/3600.);
 
         } while (!err && tleft > 0);
         if (err)
@@ -144,7 +142,7 @@ int main(int argc, char *argv[])
             break;
         }
         else 
-            printf("\r  o Computing water quality at hour %d", (t/3600));
+            printf("\r  o Computing water quality at hour %d", (long)(t/3600.));
 
     // --- report results
 

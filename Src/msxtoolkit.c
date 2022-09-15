@@ -48,7 +48,7 @@ char * MSXproj_findID(int type, char *id);
 char * MSXproj_getErrmsg(int errcode);
 int    MSXqual_open(void);
 int    MSXqual_init(void);
-int    MSXqual_step(long *t, long *tleft);
+int    MSXqual_step(double *t, double *tleft);
 int    MSXqual_close(void);
 double MSXqual_getNodeQual(int j, int m);
 double MSXqual_getLinkQual(int k, int m);
@@ -175,7 +175,8 @@ int   MSXDLLEXPORT  MSXusehydfile(char *fname)
 
 // --- read length of simulation period covered by file
 
-    fread(&MSX.Dur, sizeof(INT4), 1, MSX.HydFile.file);
+    fread(&n, sizeof(INT4), 1, MSX.HydFile.file);
+    MSX.Dur = 1000 * n;
     MSX.HydOffset = ftell(MSX.HydFile.file);
     return 0;
 }
@@ -194,7 +195,7 @@ int  MSXDLLEXPORT  MSXsolveQ()
 **    an error code (or 0 for no error).
 */
 {
-    long t, tleft = 0;
+    double t, tleft = 0;
     int err = 0;
     if ( !MSX.ProjectOpened ) return ERR_MSX_NOT_OPENED;
     CALL(err, MSXinit(1));
@@ -226,7 +227,7 @@ int  MSXDLLEXPORT  MSXinit(int saveFlag)
 
 //=============================================================================
 
-int  MSXDLLEXPORT  MSXstep(long *t, long *tleft)
+int  MSXDLLEXPORT  MSXstep(double *t, double *tleft)
 /*
 **  Purpose:
 **    advances the WQ simulation over a single time step.
@@ -428,7 +429,7 @@ int  MSXDLLEXPORT  MSXgetID(int type, int index, char *id, int len)
         case PARAMETER: strncpy(id, MSX.Param[index].id, len);   break;
         case PATTERN:   strncpy(id, MSX.Pattern[index].id, len); break;
     }
-	id[len] = '\0';                                                            //(L. Rossman - 11/01/10)
+    id[len] = '\0';                                                            //(L. Rossman - 11/01/10)
     return 0;
 }
 

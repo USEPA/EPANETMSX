@@ -34,7 +34,6 @@ extern "C" {
 #endif
 
 // --- define MSX constants
-
 #define MSX_NODE      0
 #define MSX_LINK      1
 #define MSX_TANK      2
@@ -60,7 +59,7 @@ int  MSXDLLEXPORT MSXsolveH(void);
 int  MSXDLLEXPORT MSXusehydfile(char *fname);
 int  MSXDLLEXPORT MSXsolveQ(void);
 int  MSXDLLEXPORT MSXinit(int saveFlag);
-int  MSXDLLEXPORT MSXstep(long *t, long *tleft);
+int  MSXDLLEXPORT MSXstep(double *t, double *tleft);
 int  MSXDLLEXPORT MSXsaveoutfile(char *fname);
 int  MSXDLLEXPORT MSXsavemsxfile(char *fname);
 int  MSXDLLEXPORT MSXreport(void);
