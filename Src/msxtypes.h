@@ -7,13 +7,14 @@
 **  Copyright:     see AUTHORS
 **  License:       see LICENSE
 **  VERSION:       2.0.00
-**  LAST UPDATE:   04/14/2021
+**  LAST UPDATE:   08/30/2022
 **  Bug Fix:       Bug ID 08, Feng Shang, 01/07/08 
 **                 Bug ID 09 (add roughness as hydraulic variable) Feng Shang 01/29/2008
 ***********************************************************************/
 
 #include "mathexpr.h"
 #include "mempool.h"
+#include <stdint.h>
 
 //-----------------------------------------------------------------------------
 //  Definition of 4-byte integers & reals
@@ -205,7 +206,7 @@ typedef  float REAL4;
                   TIMESTEP_OPTION,
                   RTOL_OPTION,
                   ATOL_OPTION,
-				  COMPILER_OPTION,
+                  COMPILER_OPTION,
                   MAXSEGMENT_OPTION,
                   PECLETNUMER_OPTION};                                            //1.1.00
 
@@ -260,7 +261,7 @@ typedef  float REAL4;
            ERR_OPEN_RPT_FILE,          // 521                                  //(LR-11/20/07, to fix bug 08)           
            ERR_COMPILE_FAILED,         // 522                                  //1.1.00
            ERR_COMPILED_LOAD,          // 523                                  //1.1.00
-		   ERR_ILLEGAL_MATH,           // 524                                  //1.1.00         
+           ERR_ILLEGAL_MATH,           // 524                                  //1.1.00         
            ERR_MAX};
 
 
@@ -346,7 +347,9 @@ struct Sseg                            // PIPE SEGMENT OBJECT
     double    * lastc;                 // species concentrations of previous step 
     struct    Sseg *prev;              // ptr. to previous segment
     struct    Sseg *next;              // ptr. to next segment
-    double   hresponse, uresponse, dresponse;   //for dispersion response of initial, upstream and downstream condition
+    double    hresponse,               // for dispersion response of initial,
+              uresponse,               // upstream and downstream condition 
+              dresponse;    
 };
 typedef struct Sseg *Pseg;
 
@@ -430,8 +433,8 @@ typedef struct
 {
    
     double viscosity;
-    double DIFFUS;                      // Diffusivity of chlorine 1.3E-8  @ 20 deg C (sq ft/sec)                                     
-    double PecletLimit;                 // The Pectlet number below which the dispersion in a pipe is considered
+    double DIFFUS;       // Diffusivity of chlorine 1.3E-8  @ 20 deg C (sq ft/sec)                                     
+    double PecletLimit;  // The Pectlet number below which the dispersion in a pipe is considered
 
     int* Order;          // Node-to-row of re-ordered matrix
     int* Row;            // Row-to-node of re-ordered matrix
@@ -449,18 +452,13 @@ typedef struct
     double* Aij;         // Non-zero, off-diagonal matrix coeffs.
     double* F;           // Right hand side vector
     
-    Padjlist* Adjlist;                   // Node adjacency lists
+    Padjlist* Adjlist;   // Node adjacency lists
 
 
-    double* md;                         //molecular diffusion
-    double* ld;                         //fixed longitudinal dispersion coefficient
-    double* pipeDispersionCoeff;        //effective longitudinal dispersion coefficient	 
-}Sdispersion;
-
-
-
-
-
+    double* md;          // molecular diffusion
+    double* ld;          // fixed longitudinal dispersion coefficient
+    double* pipeDispersionCoeff;  //effective longitudinal dispersion coefficient	 
+} Sdispersion;
 
 
 typedef struct                         // MSX PROJECT VARIABLES
@@ -480,7 +478,7 @@ typedef struct                         // MSX PROJECT VARIABLES
           Saveflag,                    // Save results flag
           Rptflag,                     // Report results flag
           Coupling,                    // Degree of coupling for solving DAE's
-	      Compiler,                    // chemistry function compiler code     //1.1.00 
+          Compiler,                    // chemistry function compiler code     //1.1.00 
           AreaUnits,                   // Surface area units
           RateUnits,                   // Reaction rate time units
           Solver,                      // Choice of ODE solver
@@ -489,22 +487,19 @@ typedef struct                         // MSX PROJECT VARIABLES
           ErrCode,                     // Error code
           ProjectOpened,               // Project opened flag
           QualityOpened;               // Water quality system opened flag
-   int   MaxSegments;                  //maximum number of segments in a link  
+   int    MaxSegments;                 // Maximum number of segments in a link  
    long   HydOffset,                   // Hydraulics file byte offset
-   //       Qstep,                       // Quality time step (sec)
           Pstep,                       // Time pattern time step (sec)
           Pstart,                      // Starting pattern time (sec)
           Rstep,                       // Reporting time step (sec)
           Rstart,                      // Time when reporting starts
-          Rtime,                       // Next reporting time (sec)
-   //       Htime,                       // Current hydraulic time (sec)
-   //       Qtime,                       // Current quality time (sec)
-          Statflag,                    // Reporting statistic flag
-          Dur;                         // Duration of simulation (sec)
+          Statflag;                    // Reporting statistic flag
 
-   double Qstep,                        //Quality time step (sec) double type MSX 2.0.0 
-          Htime,                       // Current hydraulic time (sec)  double type MSX 2.0.0 
-          Qtime;                        // Current quality time (sec) double type MSX 2.0.0
+  int64_t Qstep,                       // Quality time step (millisec)
+          Qtime,                       // Current quality time (millisec)
+          Htime,                       // Current hydraulic time (millisec)
+          Rtime,                       // Next reporting time (millisec)
+          Dur;                         // Duration of simulation (millisec)
 
    REAL4  *D,                          // Node demands
           *H,                          // Node heads
@@ -515,7 +510,7 @@ typedef struct                         // MSX PROJECT VARIABLES
           DefRtol,                     // Default relative error tolerance
           DefAtol,                     // Default absolute error tolerance
           *K,                          // Vector of expression constants       //1.1.00
-	      *C0,			               // Species initial quality vector
+          *C0,                         // Species initial quality vector
           *C1;                         // Species concentration vector
 
    Pseg   *FirstSeg,                   // First WQ segment in each pipe/tank
@@ -530,21 +525,20 @@ typedef struct                         // MSX PROJECT VARIABLES
    Stank    *Tank;                     // Tank data
    Spattern *Pattern;                  // Pattern data
    
-   char      HasWallSpecies;  // wall species indicator
-   char      OutOfMemory;     // out of memory indicator
-   Padjlist* Adjlist;                   // Node adjacency lists
-   Pseg* NewSeg;         // new segment added to each pipe
-   Pseg  FreeSeg;        // pointer to unused segment
-   FlowDirection *FlowDir;        // flow direction for each pipe
+   char      HasWallSpecies;           // wall species indicator
+   char      OutOfMemory;              // out of memory indicator
+   Padjlist* Adjlist;                  // Node adjacency lists
+   Pseg* NewSeg;                       // new segment added to each pipe
+   Pseg  FreeSeg;                      // pointer to unused segment
+   FlowDirection *FlowDir;             // flow direction for each pipe
    SmassBalance MassBalance;
-   alloc_handle_t* QualPool;       // memory pool
+   alloc_handle_t* QualPool;           // memory pool
 
-   int DispersionFlag;   //1 if dispersion modeling
+   int DispersionFlag;                 // 1 if dispersion modeling
 
    double* MassIn;        // mass inflow of each species to each node
    double* SourceIn;      // external mass inflow of each species from WQ source;
    int* SortedNodes;
-
   
    Sdispersion Dispersion;
 

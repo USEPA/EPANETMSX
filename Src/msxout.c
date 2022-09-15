@@ -7,7 +7,7 @@
 **  Copyright:     see AUTHORS
 **  License:       see LICENSE
 **  VERSION:       2.0.00
-**  LAST UPDATE:   04/14/2021
+**  LAST UPDATE:   08/30/2022
 ******************************************************************************/
 
 #include <stdio.h>
@@ -121,7 +121,7 @@ int MSXout_saveInitialResults()
     fwrite(&n, sizeof(INT4), 1, f);                         //Reporting step size
     for (m=1; m<=MSX.Nobjects[SPECIES]; m++)
     {
-        n = strlen(MSX.Species[m].id);
+        n = (INT4)strlen(MSX.Species[m].id);
         fwrite(&n, sizeof(INT4), 1, f);                     //Length of species ID
         fwrite(MSX.Species[m].id, sizeof(char), n, f);      //Species ID string
     }

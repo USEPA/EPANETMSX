@@ -7,7 +7,7 @@
 **  Copyright:     see AUTHORS
 **  License:       see LICENSE
 **  VERSION:       2.0.00
-**  LAST UPDATE:   04/14/2021
+**  LAST UPDATE:   08/20/2022
 **  BUG FIX:	   BUG ID 09 (add roughness as a hydraulic variable) Feng Shang 01/29/2008	
 *******************************************************************************/
 
@@ -215,19 +215,20 @@ int MSXinp_readNetData()
 */
 {
     int   errcode = 0;
-	int   i, k, n, t = 0;
+    int   i, k, n, t = 0;
     int   n1 = 0, n2 = 0;
     long  qstep;
     float diam = 0.0, len = 0.0, v0 = 0.0, xmix = 0.0, vmix = 0.0;
 
-	float roughness = 0.0;   /*Feng Shang, Bug ID 8,  01/29/2008*/
+    float roughness = 0.0;   /*Feng Shang, Bug ID 8,  01/29/2008*/
+
 // --- get flow units & time parameters
 
     CALL(errcode, ENgetflowunits(&MSX.Flowflag));
     if ( MSX.Flowflag >= EN_LPS ) MSX.Unitsflag = SI;
     else                          MSX.Unitsflag = US;
     CALL(errcode, ENgettimeparam(EN_QUALSTEP, &qstep));
-    MSX.Qstep = (double)qstep;
+    MSX.Qstep = qstep * 1000;
     CALL(errcode, ENgettimeparam(EN_REPORTSTEP, &MSX.Rstep));
     CALL(errcode, ENgettimeparam(EN_REPORTSTART, &MSX.Rstart));
     CALL(errcode, ENgettimeparam(EN_PATTERNSTEP, &MSX.Pstep));
@@ -349,8 +350,8 @@ int  MSXinp_readMsxData()
 
 // --- check for errors
 
-	if ( checkCyclicTerms() ) errsum++;                                        //1.1.00
-	freeMatrix(TermArray);                                                     //1.1.00
+    if ( checkCyclicTerms() ) errsum++;                                        //1.1.00
+    freeMatrix(TermArray);                                                     //1.1.00
     if (errsum > 0) return ERR_MSX_INPUT;                                      //1.1.00
     return 0;
 }
@@ -653,6 +654,7 @@ int parseOption()
 {
     int k;
     double v;
+
 // --- determine which option is being read
 
     if ( Ntokens < 2 ) return 0;
@@ -685,12 +687,17 @@ int parseOption()
           k = MSXutils_findmatch(Tok[1], CouplingWords);
           if ( k < 0 ) return ERR_KEYWORD;
           MSX.Coupling = k;
-		  break;
+          break;
 
       case TIMESTEP_OPTION:
-          v = atof(Tok[1]);
+
+          // Read time step as a floating point value in seconds
+          if ( !MSXutils_getDouble(Tok[1], &v) ) return ERR_NUMBER;
           if ( v <= 0 ) return ERR_NUMBER;
-          MSX.Qstep = v;
+
+          // Convert time step to integer milliseconds
+          v = round(v * 1000.);
+          MSX.Qstep = (int64_t)v;
           break;
 
       case RTOL_OPTION:
@@ -992,7 +999,7 @@ int parseQuality()
 
     if ( i == 1)
     {
-		MSX.C0[m] = x;
+        MSX.C0[m] = x;
         if ( MSX.Species[m].type == BULK )
         {
             for (j=1; j<=MSX.Nobjects[NODE]; j++) MSX.Node[j].c0[m] = x;
@@ -1161,8 +1168,8 @@ int parsePattern()
 **    an error code (0 if no error)
 */
 {
-	int i, k;
-	double x;
+    int i, k;
+    double x;
     SnumList *listItem;
 
 // --- get time pattern index
@@ -1170,7 +1177,7 @@ int parsePattern()
     if ( Ntokens < 2 ) return ERR_ITEMS;
     i = MSXproj_findObject(PATTERN, Tok[0]);
     if ( i <= 0 ) return ERR_NAME;
-	MSX.Pattern[i].id = MSXproj_findID(PATTERN, Tok[0]);
+    MSX.Pattern[i].id = MSXproj_findID(PATTERN, Tok[0]);
 
 // --- begin reading pattern multipliers
 
@@ -1297,25 +1304,21 @@ int parseDiffu()
     int m;
     double  x;
 
-
     // --- get source type
-
     if (Ntokens < 2) return ERR_ITEMS;
-    //  --- get species index
 
+    //  --- get species index
     m = MSXproj_findObject(SPECIES, Tok[0]);
     if (m <= 0) return ERR_NAME;
 
     // --- check that species is a BULK species
-
     if (MSX.Species[m].type != BULK) return 0;
 
     // --- get base strength
-
     if (!MSXutils_getDouble(Tok[1], &x)) return ERR_NUMBER;
     if (x < 0) return ERR_NUMBER;
 
-    if (Ntokens > 2 &&MSXutils_match(Tok[2], "FIXED"))
+    if (Ntokens > 2 && MSXutils_match(Tok[2], "FIXED"))
     {
         x = x * MSX.Dispersion.DIFFUS;
         MSX.Dispersion.ld[m] = x;     
@@ -1455,22 +1458,22 @@ int checkCyclicTerms()                                                         /
 **    1 if cyclic reference found or 0 if none found.
 */
 {
-	int i, j, n;
+    int i, j, n;
     char msg[MAXMSG+1];
 
-	n = MSX.Nobjects[TERM];
-	for (i=1; i<n; i++)
-	{
+    n = MSX.Nobjects[TERM];
+    for (i=1; i<n; i++)
+    {
         for (j=1; j<=n; j++) TermArray[0][j] = 0.0;
-		if ( traceTermPath(i, i, n) )
-		{
-			sprintf(msg, "Error 410 - term %s contains a cyclic reference.",
-				MSX.Term[i].id);
+        if ( traceTermPath(i, i, n) )
+	{
+            sprintf(msg, "Error 410 - term %s contains a cyclic reference.",
+                MSX.Term[i].id);
             ENwriteline(msg);
-			return 1;
-		}
-	}
-	return 0;
+            return 1;
+        }
+    }
+    return 0;
 }
 
 //=============================================================================
@@ -1490,14 +1493,14 @@ int traceTermPath(int i, int istar, int n)                                     /
 **    1 if term istar found; 0 if not found.
 */
 {
-	int j;
+    int j;
     if ( TermArray[0][i] == 1.0 ) return 0;
-	TermArray[0][i] = 1.0;
-	for (j=1; j<=n; j++)
-	{
-		if ( TermArray[i][j] == 0.0 ) continue;
-		if ( j == istar ) return 1;
-		else if ( traceTermPath(j, istar, n) ) return 1;
-	}
-	return 0;
+    TermArray[0][i] = 1.0;
+    for (j=1; j<=n; j++)
+    {
+        if ( TermArray[i][j] == 0.0 ) continue;
+        if ( j == istar ) return 1;
+        else if ( traceTermPath(j, istar, n) ) return 1;
+    }
+    return 0;
 }
