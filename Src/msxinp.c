@@ -693,7 +693,7 @@ int parseOption()
 
           // Read time step as a floating point value in seconds
           if ( !MSXutils_getDouble(Tok[1], &v) ) return ERR_NUMBER;
-          if ( v <= 0 ) return ERR_NUMBER;
+          if ( v < 0.001 ) return ERR_NUMBER;
 
           // Convert time step to integer milliseconds
           v = round(v * 1000.);
