@@ -80,7 +80,7 @@ void   MSXqual_reversesegs(int k);
 //  Local functions
 //-----------------
 static int    getHydVars(void);
-static int    transport(double tstep);
+static int    transport(int64_t tstep);
 static void   initSegs(void);
 static int    flowdirchanged(void);
 static void   advectSegs(double dt);
@@ -286,7 +286,7 @@ int  MSXqual_init()
 
     MSX.Htime = 0;                         //Hydraulic solution time
     MSX.Qtime = 0;                         //Quality routing time
-    MSX.Rtime = MSX.Rstart;                //Reporting time
+    MSX.Rtime = MSX.Rstart * 1000;                //Reporting time
     MSX.Nperiods = 0;                      //Number fo reporting periods
 
     for (m = 1; m <= MSX.Nobjects[SPECIES]; m++)
@@ -307,7 +307,7 @@ int  MSXqual_init()
 
 //=============================================================================
 
-int MSXqual_step(double *t, double *tleft)
+int MSXqual_step(double* t, double* tleft)
 /*
 **  Purpose:
 **    updates WQ conditions over a single WQ time step.
@@ -327,50 +327,51 @@ int MSXqual_step(double *t, double *tleft)
 **      513 = can't integrate reaction rates
 */
 {
-    double hstep;
     int  k, errcode = 0, flowchanged;
     int m;
-    double smassin, smassout, sreacted, tstep, dt;
-// --- set the shared memory pool to the water quality pool
-//     and the overall time step to nominal WQ time step
+    double smassin, smassout, sreacted;
+    int64_t  hstep, tstep, dt;
+
+    // --- set the shared memory pool to the water quality pool
+    //     and the overall time step to nominal WQ time step
 
     AllocSetPool(MSX.QualPool);
     tstep = MSX.Qstep;
 
-// --- repeat until the end of the time step
+    // --- repeat until the end of the time step
 
     do
     {
-    // --- find the time until the next hydraulic event occurs
+        // --- find the time until the next hydraulic event occurs
         dt = tstep;
         hstep = MSX.Htime - MSX.Qtime;
 
-    // --- check if next hydraulic event occurs within the current time step
+        // --- check if next hydraulic event occurs within the current time step
 
         if (hstep <= dt)
         {
 
-        // --- reduce current time step to end at next hydraulic event
+            // --- reduce current time step to end at next hydraulic event
             dt = hstep;
 
-        // --- route WQ over this time step
-            if ( dt > 0 ) CALL(errcode, transport(dt));
+            // --- route WQ over this time step
+            if (dt > 0) CALL(errcode, transport(dt));
             MSX.Qtime += dt;
 
-        // --- retrieve new hydraulic solution
-            if (MSX.Qtime >= MSX.Htime)
+            // --- retrieve new hydraulic solution
+            if (MSX.Qtime == MSX.Htime)
             {
                 CALL(errcode, getHydVars());
                 if (MSX.Qtime < MSX.Dur)
                 {
                     // --- initialize pipe segments (at time 0) or else re-orient segments
                     //     to accommodate any flow reversals
-                    if (MSX.Qtime == 0.0)
+                    if (MSX.Qtime == 0)
                     {
                         flowchanged = 1;
                         initSegs();
                     }
-                    else 
+                    else
                         flowchanged = flowdirchanged();
 
                     if (flowchanged)
@@ -380,16 +381,16 @@ int MSXqual_step(double *t, double *tleft)
                 }
             }
 
-        // --- report results if its time to do so
-            if (MSX.Saveflag && MSX.Qtime >= (double)MSX.Rtime)
+            // --- report results if its time to do so
+            if (MSX.Saveflag && MSX.Qtime == MSX.Rtime)
             {
                 CALL(errcode, MSXout_saveResults());
-                MSX.Rtime += MSX.Rstep;
+                MSX.Rtime += MSX.Rstep * 1000;
                 MSX.Nperiods++;
             }
         }
 
-    // --- otherwise just route WQ over the current time step
+        // --- otherwise just route WQ over the current time step
 
         else
         {
@@ -397,47 +398,21 @@ int MSXqual_step(double *t, double *tleft)
             MSX.Qtime += dt;
         }
 
-    // --- reduce overall time step by the size of the current time step
+        // --- reduce overall time step by the size of the current time step
 
         tstep -= dt;
         if (MSX.OutOfMemory) errcode = ERR_MEMORY;
     } while (!errcode && tstep > 0);
 
-// --- update the current time into the simulation and the amount remaining
+    // --- update the current time into the simulation and the amount remaining
 
-    *t = MSX.Qtime;
-    *tleft = 1.0*MSX.Dur - MSX.Qtime;
+    *t = MSX.Qtime / 1000.;
+    *tleft = (MSX.Dur - MSX.Qtime) / 1000.;
 
-// --- if there's no time remaining, then save the final records to output file
+    // --- if there's no time remaining, then save the final records to output file
 
-
-/*    if (*t % 3600 == 0)
+    if (*tleft <= 0 && MSX.Saveflag)
     {
-        findstoredmass(MSX.MassBalance.final);
-        for (m = 1; m <= MSX.Nobjects[SPECIES]; m++)
-        {
-            sreacted = 0.0;
-            for (k = 1; k <= MSX.Nobjects[LINK]; k++)
-                sreacted += MSX.Link[k].reacted[m];
-            for (k = 1; k <= MSX.Nobjects[TANK]; k++)
-                sreacted += MSX.Tank[k].reacted[m];
-
-            MSX.MassBalance.reacted[m] = sreacted;
-            smassin = MSX.MassBalance.initial[m] + MSX.MassBalance.inflow[m]+MSX.MassBalance.indisperse[m];
-            smassout = MSX.MassBalance.outflow[m] + MSX.MassBalance.final[m];
-            if (sreacted < 0)  //loss
-                smassout -= sreacted;
-            else
-                smassin += sreacted;
-
-            if (smassin == 0)
-                MSX.MassBalance.ratio[m] = 1.0;
-            else
-                MSX.MassBalance.ratio[m] = smassout / smassin;
-        }
-    }*/
-    if ( *tleft <= 0 && MSX.Saveflag )
-    {   
         findstoredmass(MSX.MassBalance.final);
         for (m = 1; m <= MSX.Nobjects[SPECIES]; m++)
         {
@@ -449,7 +424,7 @@ int MSXqual_step(double *t, double *tleft)
 
             MSX.MassBalance.reacted[m] = sreacted;
             smassin = MSX.MassBalance.initial[m] + MSX.MassBalance.inflow[m] + MSX.MassBalance.indisperse[m];
-            smassout = MSX.MassBalance.outflow[m]+MSX.MassBalance.final[m];
+            smassout = MSX.MassBalance.outflow[m] + MSX.MassBalance.final[m];
             if (sreacted < 0)  //loss
                 smassout -= sreacted;
             else
@@ -459,8 +434,6 @@ int MSXqual_step(double *t, double *tleft)
                 MSX.MassBalance.ratio[m] = 1.0;
             else
                 MSX.MassBalance.ratio[m] = smassout / smassin;
-
-      
         }
         CALL(errcode, MSXout_saveFinalResults());
     }
@@ -660,7 +633,7 @@ int  getHydVars()
 
 // --- update elapsed time until next hydraulic event
 
-    MSX.Htime = (double)hydtime + (double)hydstep;
+    MSX.Htime = 1000 * (hydtime + hydstep);
 
 /*
     if (MSX.Qtime < MSX.Dur)
@@ -679,7 +652,7 @@ int  getHydVars()
 
 //=============================================================================
 
-int  transport(double tstep)
+int  transport(int64_t tstep)
 /*
 **  Purpose:
 **    transports constituent mass through pipe network
@@ -692,7 +665,8 @@ int  transport(double tstep)
 **    an error code or 0 if no error.
 */
 {
-    double qtime, dt;
+    int64_t qtime, dt64;
+    double dt;
     int  errcode = 0;
 
 // --- repeat until time step is exhausted
@@ -703,8 +677,9 @@ int  transport(double tstep)
            !errcode &&
            qtime < tstep)
     {                                       // Qstep is nominal quality time step
-        dt = MIN(MSX.Qstep, tstep-qtime);   // get actual time step
-        qtime += dt;                        // update amount of input tstep taken
+        dt64 = MIN(MSX.Qstep, tstep-qtime);   // get actual time step
+        qtime += dt64;                        // update amount of input tstep taken
+        dt = dt64 / 1000;
         errcode = MSXchem_react(dt);        // react species in each pipe & tank
         if ( errcode ) return errcode;
         advectSegs(dt);                     // advect segments in each pipe

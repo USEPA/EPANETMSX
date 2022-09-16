@@ -6,7 +6,7 @@
 **  Copyright:     see AUTHORS
 **  License:       see LICENSE
 **  VERSION:       2.0.00
-**  LAST UPDATE:   10/05/08
+**  LAST UPDATE:   08/30/2022
 **
 **  EPANET-MSX is an extension of the EPANET program for modeling the fate
 **  and transport of multiple interacting chemical species within a water
@@ -27,10 +27,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <float.h>
-
 #include "epanet2.h"                   // EPANET toolkit header file
 #include "epanetmsx.h"                 // EPANET-MSX toolkit header file
-
+#include <math.h>
 int main(int argc, char* argv[])
 /*
 **  Purpose:
@@ -54,29 +53,39 @@ int main(int argc, char* argv[])
 */
 {
     int    err, done = 1;
-    double   t, tleft;
-    double   oldHour, newHour;
+    double t, tleft;
+    long   oldHour, newHour;
+    char* inpFile, * repFile, * outFile;
 
     // --- check command line arguments
 
-    if (argc < 4)
+    if (argc < 4 || argc > 5)
     {
-        printf("\n Too few command line arguments.\n");
+        printf("\nInvalid command line arguments:\n\n");
+        printf("usage: runepanetmsx <inp_file> <msx_file> <report_file> [binary_output_file]\n");
         return 0;
+    }
+    inpFile = argv[1];
+    repFile = argv[3];
+    if (argc == 5) {
+        outFile = argv[4];
+    }
+    else {
+        outFile = "";
     }
 
     // --- open EPANET file
 
-    printf("\n... EPANET-MSX Version 2.0.0\n");
+    printf("\n... EPANET-MSX Version 2.0.0\n");                                  //1.1.00
     printf("\n  o Processing EPANET input file");
-    err = ENopen(argv[1], argv[3], "");
+    err = ENopen(inpFile, repFile, outFile);
     do
     {
         if (err)
         {
             printf("\n\n... Cannot read EPANET file; error code = %d\n", err);
             ENclose();
-            return 0;
+            return err;
         }
 
         // --- open the MSX input file
@@ -119,11 +128,11 @@ int main(int argc, char* argv[])
         {
             if (oldHour != newHour)
             {
-                printf("\r  o Computing water quality at hour %-4f", newHour);
+                printf("\r  o Computing water quality at hour %d", newHour);
                 oldHour = newHour;
             }
             err = MSXstep(&t, &tleft);
-            newHour = t / 3600.0;
+            newHour = (long)(t / 3600.);
 
         } while (!err && tleft > 0);
         if (err)
@@ -132,7 +141,7 @@ int main(int argc, char* argv[])
             break;
         }
         else
-            printf("\r  o Computing water quality at hour %-4f", t / 3600.0);
+            printf("\r  o Computing water quality at hour %d", (long)(t / 3600.));
 
         // --- report results
 
