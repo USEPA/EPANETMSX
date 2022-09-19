@@ -2,11 +2,13 @@
 **  MODULE:        MSXQUAL.C
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   Water quality routing routines.
-**  AUTHORS:       see AUTHORS
-**  Copyright:     see AUTHORS
-**  License:       see LICENSE
+**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
+**                 All Rights Reserved. See license information in LICENSE.TXT.
+**  AUTHORS:       L. Rossman, US EPA - NRMRL
+**                 F. Shang, University of Cincinnati
+**                 J. Uber, University of Cincinnati
 **  VERSION:       2.0.00
-**  LAST UPDATE:   04/14/2021
+**  LAST UPDATE:   08/30/2022
 ******************************************************************************/
 
 #include <stdio.h>
@@ -18,6 +20,7 @@
 //#include "mempool.h"
 #include "msxutils.h"
 #include "dispersion.h"
+
 // Macros to identify upstream & downstream nodes of a link
 // under the current flow and to compute link volume
 //
@@ -43,6 +46,7 @@ extern MSXproject  MSX;                // MSX project data
 
 // Stagnant flow tolerance
 const double Q_STAGNANT = 0.005 / GPMperCFS;     // 0.005 gpm = 1.114e-5 cfs
+
 //  Imported functions
 //--------------------
 int    MSXchem_open(void);
@@ -152,6 +156,7 @@ int  MSXqual_open()
     MSX.MassBalance.reacted = (double*)calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
     MSX.MassBalance.final   = (double*)calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
     MSX.MassBalance.ratio   = (double*)calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
+
 // --- allocate memory used for pointers to the first, last,
 //     and new WQ segments in each link and tank
 
@@ -167,12 +172,12 @@ int  MSXqual_open()
 // --- allocate memory used to accumulate mass and volume
 //     inflows to each node
 
-    n        = MSX.Nobjects[NODE] + 1;
-  
+    n = MSX.Nobjects[NODE] + 1;
     MSX.MassIn   = (double *) calloc(MSX.Nobjects[SPECIES]+1, sizeof(double));
     MSX.SourceIn = (double*)calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
 
-    // Allocate memory for topologically sorted nodes
+// --- allocate memory for topologically sorted nodes
+
     MSX.SortedNodes = (int*)calloc(n, sizeof(int));
 
 // --- check for successful memory allocation
@@ -286,7 +291,7 @@ int  MSXqual_init()
 
     MSX.Htime = 0;                         //Hydraulic solution time
     MSX.Qtime = 0;                         //Quality routing time
-    MSX.Rtime = MSX.Rstart * 1000;                //Reporting time
+    MSX.Rtime = MSX.Rstart * 1000;         //Reporting time
     MSX.Nperiods = 0;                      //Number fo reporting periods
 
     for (m = 1; m <= MSX.Nobjects[SPECIES]; m++)
@@ -299,6 +304,7 @@ int  MSXqual_init()
         MSX.MassBalance.reacted[m] = 0.0;
         MSX.MassBalance.ratio[m] = 0.0;
     }
+
 // --- open binary output file if results are to be saved
 
     if ( MSX.Saveflag ) errcode = MSXout_open();
@@ -307,7 +313,7 @@ int  MSXqual_init()
 
 //=============================================================================
 
-int MSXqual_step(double* t, double* tleft)
+int MSXqual_step(double *t, double *tleft)
 /*
 **  Purpose:
 **    updates WQ conditions over a single WQ time step.
@@ -331,34 +337,35 @@ int MSXqual_step(double* t, double* tleft)
     int m;
     double smassin, smassout, sreacted;
     int64_t  hstep, tstep, dt;
-
-    // --- set the shared memory pool to the water quality pool
-    //     and the overall time step to nominal WQ time step
+    
+// --- set the shared memory pool to the water quality pool
+//     and the overall time step to nominal WQ time step
 
     AllocSetPool(MSX.QualPool);
     tstep = MSX.Qstep;
+    if (MSX.Qtime + tstep > MSX.Dur) tstep = MSX.Dur - MSX.Qtime;
 
-    // --- repeat until the end of the time step
+// --- repeat until the end of the time step
 
     do
     {
-        // --- find the time until the next hydraulic event occurs
+    // --- find the time until the next hydraulic event occurs
         dt = tstep;
         hstep = MSX.Htime - MSX.Qtime;
 
-        // --- check if next hydraulic event occurs within the current time step
+    // --- check if next hydraulic event occurs within the current time step
 
         if (hstep <= dt)
         {
 
-            // --- reduce current time step to end at next hydraulic event
+        // --- reduce current time step to end at next hydraulic event
             dt = hstep;
 
-            // --- route WQ over this time step
-            if (dt > 0) CALL(errcode, transport(dt));
+        // --- route WQ over this time step
+            if ( dt > 0 ) CALL(errcode, transport(dt));
             MSX.Qtime += dt;
 
-            // --- retrieve new hydraulic solution
+        // --- retrieve new hydraulic solution
             if (MSX.Qtime == MSX.Htime)
             {
                 CALL(errcode, getHydVars());
@@ -371,7 +378,7 @@ int MSXqual_step(double* t, double* tleft)
                         flowchanged = 1;
                         initSegs();
                     }
-                    else
+                    else 
                         flowchanged = flowdirchanged();
 
                     if (flowchanged)
@@ -381,7 +388,7 @@ int MSXqual_step(double* t, double* tleft)
                 }
             }
 
-            // --- report results if its time to do so
+        // --- report results if its time to do so
             if (MSX.Saveflag && MSX.Qtime == MSX.Rtime)
             {
                 CALL(errcode, MSXout_saveResults());
@@ -390,7 +397,7 @@ int MSXqual_step(double* t, double* tleft)
             }
         }
 
-        // --- otherwise just route WQ over the current time step
+    // --- otherwise just route WQ over the current time step
 
         else
         {
@@ -398,20 +405,20 @@ int MSXqual_step(double* t, double* tleft)
             MSX.Qtime += dt;
         }
 
-        // --- reduce overall time step by the size of the current time step
+    // --- reduce overall time step by the size of the current time step
 
         tstep -= dt;
         if (MSX.OutOfMemory) errcode = ERR_MEMORY;
     } while (!errcode && tstep > 0);
 
-    // --- update the current time into the simulation and the amount remaining
+// --- update the current time into the simulation and the amount remaining
 
     *t = MSX.Qtime / 1000.;
     *tleft = (MSX.Dur - MSX.Qtime) / 1000.;
 
-    // --- if there's no time remaining, then save the final records to output file
+// --- if there's no time remaining, then save the final records to output file
 
-    if (*tleft <= 0 && MSX.Saveflag)
+    if ( *tleft <= 0 && MSX.Saveflag )
     {
         findstoredmass(MSX.MassBalance.final);
         for (m = 1; m <= MSX.Nobjects[SPECIES]; m++)
@@ -424,7 +431,7 @@ int MSXqual_step(double* t, double* tleft)
 
             MSX.MassBalance.reacted[m] = sreacted;
             smassin = MSX.MassBalance.initial[m] + MSX.MassBalance.inflow[m] + MSX.MassBalance.indisperse[m];
-            smassout = MSX.MassBalance.outflow[m] + MSX.MassBalance.final[m];
+            smassout = MSX.MassBalance.outflow[m]+MSX.MassBalance.final[m];
             if (sreacted < 0)  //loss
                 smassout -= sreacted;
             else
@@ -633,7 +640,8 @@ int  getHydVars()
 
 // --- update elapsed time until next hydraulic event
 
-    MSX.Htime = 1000 * (hydtime + hydstep);
+    MSX.Htime = hydtime + hydstep;
+    MSX.Htime *= 1000;
 
 /*
     if (MSX.Qtime < MSX.Dur)
@@ -677,9 +685,10 @@ int  transport(int64_t tstep)
            !errcode &&
            qtime < tstep)
     {                                       // Qstep is nominal quality time step
-        dt64 = MIN(MSX.Qstep, tstep-qtime);   // get actual time step
-        qtime += dt64;                        // update amount of input tstep taken
-        dt = dt64 / 1000;
+        dt64 = MIN(MSX.Qstep, tstep-qtime); // get actual time step
+        qtime += dt64;                      // update amount of input tstep taken
+        dt = dt64 / 1000.;                  // time step as fractional seconds
+        
         errcode = MSXchem_react(dt);        // react species in each pipe & tank
         if ( errcode ) return errcode;
         advectSegs(dt);                     // advect segments in each pipe
@@ -989,8 +998,8 @@ void shiftSegWallQual(int k, double dt)
     {
 
         // --- initialize a "mixture" WQ
-
-        //if vstart >= v the segment seg1 will be out of the pipe, no need to track wall concentration of this segment
+        //     if vstart >= v the segment seg1 will be out of the pipe,
+        //     so no need to track wall concentration of this segment
         if (vstart >= v) break;   //2020 moved up
         
         for (m = 1; m <= MSX.Nobjects[SPECIES]; m++) MSX.C1[m] = 0.0;
@@ -1067,7 +1076,7 @@ void sourceInput(int n, double volout, double dt)
     if (source == NULL) return;
 
 
-    qout = volout / (double) dt;
+    qout = volout / dt;
 
     // --- evaluate source input only if node outflow > cutoff flow
     if (qout <= qcutoff) return;
@@ -1080,6 +1089,7 @@ void sourceInput(int n, double volout, double dt)
         addSource(n, source, volout, dt);
         source = source->next;
     }
+
     // --- compute a new chemical equilibrium at the source node
     MSXchem_equil(NODE, MSX.Node[n].c);
  
@@ -1185,7 +1195,7 @@ double  getSourceQual(Psource source)
 // --- apply time pattern if assigned
     i = source->pat;
     if (i == 0) return(c);
-    k = (int)((ceil(MSX.Qtime) + MSX.Pstart) / MSX.Pstep) % MSX.Pattern[i].length;
+    k = (int)((MSX.Qtime + MSX.Pstart) / MSX.Pstep) % MSX.Pattern[i].length;
     if (k != MSX.Pattern[i].interval)
     {
         if ( k < MSX.Pattern[i].interval )
@@ -1326,6 +1336,7 @@ void evalnodeoutflow(int k, double * upnodequal, double tstep)
     Pseg seg;
     int m;
     int useNewSeg = 0;
+
     // Find flow volume (v) released over time step
     v = fabs(MSX.Q[k]) * tstep;
     if (v == 0.0) return;
@@ -1375,6 +1386,7 @@ void evalnodeoutflow(int k, double * upnodequal, double tstep)
         }
 
     }
+
     // ... link has no segments so add one
     else
     {
