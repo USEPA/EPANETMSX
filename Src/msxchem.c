@@ -523,10 +523,12 @@ void evalHydVariables(int k)
 {
     double dh;                         // headloss in ft
     double diam = MSX.Link[k].diam;    // diameter in ft
+    double length = MSX.Link[k].len;   // length in ft
     double av;                         // area per unit volume
 
-// --- pipe diameter in user's units (ft or m)
+// --- pipe diameter and length in user's units (ft or m)
     HydVar[DIAMETER] = diam * MSX.Ucf[LENGTH_UNITS];
+    HydVar[LENGTH] = length * MSX.Ucf[LENGTH_UNITS];
 
 // --- flow rate in user's units
     HydVar[FLOW] = fabs(MSX.Q[k]) * MSX.Ucf[FLOW_UNITS];

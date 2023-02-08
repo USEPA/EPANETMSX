@@ -31,7 +31,7 @@ static char *SolverTypeWords[] = {"EUL", "RK5", "ROS2", NULL};
 static char *CouplingWords[]   = {"NONE", "FULL", NULL};
 static char *ExprTypeWords[]   = {"", "RATE", "FORMULA", "EQUIL", NULL};
 static char *HydVarWords[]     = {"", "D", "Q", "U", "Re",
-                                  "Us", "Ff", "Av", "Kc", NULL};	/*Feng Shang 01/29/2008*/
+                                  "Us", "Ff", "Av", "Kc", "Len", NULL};	/*Feng Shang 01/27/2023*/
 static char YES[]  = "YES";
 static char NO[]   = "NO";
 static char ALL[]  = "ALL";

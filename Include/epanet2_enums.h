@@ -6,9 +6,9 @@
  Version:      2.2
  Module:       epanet2_enums.h
  Description:  enumerations of symbolic constants used by the API functions
- Authors:      see AUTHORS
- Copyright:    see AUTHORS
- License:      see LICENSE
+ Authors:      see EPANET 2.2 AUTHORS
+ Copyright:    see EPANET 2.2 AUTHORS
+ License:      see EPANET 2.2 LICENSE
  Last Updated: 02/01/2020
  ******************************************************************************
 */

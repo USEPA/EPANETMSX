@@ -112,7 +112,7 @@ void dispersion_pipe(int m, double tstep)
 				{
 					ldispersion = MSX.Dispersion.ld[m];
 				}
-				else if (reynolds > 2000) //Basha 2007
+				else if (reynolds > 2300) //Basha 2007
 				{
 					ldispersion = 0.5 * diam * shearvelocity * (10.1 + 577 * pow(reynolds / 1000.0, -2.2));
 

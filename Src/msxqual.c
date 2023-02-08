@@ -758,6 +758,7 @@ void  initSegs()
         if (v > 0.0)
         {
             int ninitsegs = MIN(100, MSX.MaxSegments);
+  
             for (int ns = 0; ns < ninitsegs; ns++)
                 MSXqual_addSeg(k, MSXqual_getFreeSeg(v / (1.0*ninitsegs), MSX.C1));
         }

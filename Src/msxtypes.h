@@ -189,6 +189,7 @@ typedef  float REAL4;
                   FRICTION,            //   friction factor
                   AREAVOL,             //   area/volume
                   ROUGHNESS,           //   roughness                          /*Feng Shang 01/29/2008*/
+                  LENGTH,              //   pipe length                        /*Feng Shang 01/27/2023
                   MAX_HYD_VARS};
 
  enum TstatType                        // Time series statistics
