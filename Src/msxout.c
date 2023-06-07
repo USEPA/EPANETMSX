@@ -123,11 +123,8 @@ int MSXout_saveInitialResults()
     {
         n = (INT4)strlen(MSX.Species[m].id);
         fwrite(&n, sizeof(INT4), 1, f);                     //Length of species ID
-        fwrite(MSX.Species[m].id, sizeof(char), n, f);      //Species ID string
-    }
-    for (m=1; m<=MSX.Nobjects[SPECIES]; m++)
-    {                                                       //Species mass units
-        fwrite(&MSX.Species[m].units, sizeof(char), MAXUNITS, f);
+        fwrite(MSX.Species[m].id, sizeof(char), n, f);      //Species ID string                                                   
+        fwrite(&MSX.Species[m].units, sizeof(char), MAXUNITS, f);   //Species mass units
     }
     ResultsOffset = ftell(f);
     NodeBytesPerPeriod = MSX.Nobjects[NODE]*MSX.Nobjects[SPECIES]*sizeof(REAL4);

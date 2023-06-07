@@ -24,7 +24,6 @@ static double* rl;                         //vector helping solve tridaigonal sy
 static double* sol;                        //vector helping solve tridaigonal system of eqns.
 
 static double* gam;
-extern int    MSXchem_equil(int zone, double* c);
 
 #pragma omp threadprivate(al, bl, cl, rl, sol, gam)
 
@@ -521,14 +520,6 @@ void disperse_tankqual(int n, int m, double massin)
 			seg->c[m] = c;
 			MSX.Tank[j].c[m] = c;
 			MSX.Node[n].c[m] = c;
-
-			if (v > 0.0) 
-				MSXchem_equil(NODE, MSX.Tank[j].c);
-			for (int sm = 1; sm <= MSX.Nobjects[SPECIES]; sm++)
-			{
-				MSX.Tank[j].c[sm] = seg->c[sm];
-				MSX.Node[n].c[sm] = seg->c[sm];
-			}
 		}
 	}
 	else if (tm == FIFO)
@@ -545,16 +536,6 @@ void disperse_tankqual(int n, int m, double massin)
 				c = MAX(0, c);
 			seg->c[m] = c;
 
-			/*
-			if (v > 0.0)
-				MSXchem_equil(NODE, seg->c);
-
-			for (int sm = 1; sm <= MSX.Nobjects[SPECIES]; sm++)
-			{
-				MSX.Tank[j].c[sm] = seg->c[sm];
-				MSX.Node[n].c[sm] = seg->c[sm];
-			}*/
-			
 		}
 	}
 	else if (tm == LIFO)
@@ -569,15 +550,7 @@ void disperse_tankqual(int n, int m, double massin)
 
 			c = MAX(0, c);
 			seg->c[m] = c;
-			/*
-			if (v > 0.0)
-				MSXchem_equil(NODE, seg->c);
 
-			for (int sm = 1; sm <= MSX.Nobjects[SPECIES]; sm++)
-			{
-				MSX.Tank[j].c[sm] = seg->c[sm];
-				MSX.Node[n].c[sm] = seg->c[sm];
-			}*/
 		}
 
 	}

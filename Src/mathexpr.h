@@ -29,6 +29,6 @@ double mathexpr_eval(MathExpr* expr, double (*getVal) (int));
 //  Deletes a tokenized math expression
 void  mathexpr_delete(MathExpr* expr);
 
-// Returns reconstructed string version of a tokenized expression              //1.1.00
+// Returns reconstructed string version of a tokenized expression              
 char * mathexpr_getStr(MathExpr* expr, char* exprStr,
                        char * (*getVariableStr) (int, char *));

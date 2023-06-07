@@ -8,8 +8,6 @@
 **  License:       see LICENSE
 **  VERSION:       2.0.00
 **  LAST UPDATE:   08/30/2022
-**  Bug fix:       Bug ID 08, Feng Shang 01/07/2008
-**                 Memory leak fixed, T. Taxon - 9/7/10
 ******************************************************************************/
 
 #include <stdio.h>
@@ -57,9 +55,9 @@ static char * Errmsg[] =
      "Error 520 - an MSX project is already opened.",
      "Error 521 - could not open MSX report file.",                            //(LR-11/20/07)
 
-     "Error 522 - could not compile chemistry functions.",                     //1.1.00
-     "Error 523 - could not load functions from compiled chemistry file.",     //1.1.00
-     "Error 524 - illegal math operation."};                                   //1.1.00
+     "Error 522 - could not compile chemistry functions.",                     
+     "Error 523 - could not load functions from compiled chemistry file.",     
+     "Error 524 - illegal math operation."};                                   
 
 //  Imported functions
 //--------------------
@@ -134,8 +132,8 @@ int  MSXproj_open(char *fname)
     CALL(errcode, MSXinp_readNetData());
     CALL(errcode, MSXinp_readMsxData());
 
-    if (strcmp(MSX.RptFile.name, ""))                                              //(FS-01/07/2008, to fix bug 08)
-	CALL(errcode, openRptFile());                                              //(LR-11/20/07, to fix bug 08)
+    if (strcmp(MSX.RptFile.name, ""))                                              
+	CALL(errcode, openRptFile());                                              
 
 // --- convert user's units to internal units
 
@@ -153,7 +151,7 @@ int  MSXproj_open(char *fname)
     // Build nodal adjacency lists 
     if (errcode == 0 && MSX.Adjlist == NULL)
     {
-        errcode = buildadjlists();   //buildadjlists is 2.2, parallel links are included
+        errcode = buildadjlists();   //parallel links are included
         if (errcode) return errcode;
     }
 
@@ -311,8 +309,8 @@ void setDefaults()
     MSX.OutFile.file = NULL;
     MSX.OutFile.mode = SCRATCH_FILE;
     MSX.TmpOutFile.file = NULL;
-    MSXutils_getTempName(MSX.OutFile.name);                                    //1.1.00
-    MSXutils_getTempName(MSX.TmpOutFile.name);                                 //1.1.00
+    MSXutils_getTempName(MSX.OutFile.name);                                    
+    MSXutils_getTempName(MSX.TmpOutFile.name);                                 
     strcpy(MSX.RptFile.name, "");
     strcpy(MSX.Title, "");
     MSX.Rptflag = 0;
@@ -324,7 +322,8 @@ void setDefaults()
     MSX.DefAtol = 0.01;
     MSX.Solver = EUL;
     MSX.Coupling = NO_COUPLING;
-    MSX.Compiler = NO_COMPILER;                                                //1.1.00
+    MSX.Compiler = NO_COMPILER;                                                
+    MSX.ErrCode = 0;
     MSX.AreaUnits = FT2;
     MSX.RateUnits = DAYS;
     MSX.Qstep = 300*1000;   // 300,000 millisec = 5 minutes
@@ -342,7 +341,7 @@ void setDefaults()
     MSX.Term = NULL;
     MSX.Const = NULL;
     MSX.Pattern = NULL;
-    MSX.K = NULL;                                                              //1.1.00
+    MSX.K = NULL;                                                              
 }
 
 //=============================================================================
@@ -457,7 +456,7 @@ int createObjects()
     MSX.Param   = (Sparam *)   calloc(MSX.Nobjects[PARAMETER]+1, sizeof(Sparam));
     MSX.Const   = (Sconst *)   calloc(MSX.Nobjects[CONSTANT]+1, sizeof(Sconst));
     MSX.Pattern = (Spattern *) calloc(MSX.Nobjects[PATTERN]+1, sizeof(Spattern));
-    MSX.K       = (double *)   calloc(MSX.Nobjects[CONSTANT]+1, sizeof(double));  //1.1.00
+    MSX.K       = (double *)   calloc(MSX.Nobjects[CONSTANT]+1, sizeof(double));  
 
 // --- create arrays for demands, heads, & flows
 
@@ -633,7 +632,7 @@ void deleteObjects()
     FREE(MSX.Species);
     FREE(MSX.Param);
     FREE(MSX.Const);
-    FREE(MSX.K);                                                               //1.1.00
+    FREE(MSX.K);                                                               
 
 // --- free memory used by intermediate terms
 
@@ -710,7 +709,7 @@ int openRptFile()
     return 0;
 }
 
-int  buildadjlists()   //from epanet2.2 for node sorting in WQ routing
+int  buildadjlists()   //from epanet for node sorting in WQ routing
 /*
 **--------------------------------------------------------------
 ** Input:   none
@@ -765,7 +764,7 @@ int  buildadjlists()   //from epanet2.2 for node sorting in WQ routing
 }
 
 
-void  freeadjlists()            //from epanet2.2 for node sorting in WQ routing
+void  freeadjlists()            //from epanet for node sorting in WQ routing
 /*
 **--------------------------------------------------------------
 ** Input:   none

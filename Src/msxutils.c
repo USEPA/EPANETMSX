@@ -33,7 +33,7 @@
 
 //=============================================================================
 
-char * MSXutils_getTempName(char *s)                                           //1.1.00
+char * MSXutils_getTempName(char *s)                                           
 /*
 **  Purpose:
 **    gets the name of a temporary file with path name and periods stripped

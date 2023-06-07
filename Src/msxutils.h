@@ -10,7 +10,7 @@
 **  LAST UPDATE:   2/8/11
 *******************************************************************************/
 
-// Gets the name of a temporary file                                           //1.1.00
+// Gets the name of a temporary file                                           
 char * MSXutils_getTempName(char *s);
 
 // Case insentive comparison of two strings

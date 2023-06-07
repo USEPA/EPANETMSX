@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 
     // --- open EPANET file
 
-    printf("\n... EPANET-MSX Version 2.0.0\n");                                  //1.1.00
+    printf("\n... EPANET-MSX Version 2.0.0\n");                                  
     printf("\n  o Processing EPANET input file");
     err = ENopen(inpFile, repFile, outFile);
     do

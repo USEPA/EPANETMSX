@@ -4,7 +4,7 @@
 **  DESCRIPTION:   Definitions of functions loaded from compiled chemistry file.
 **  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
 **                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
+**  AUTHORS:       See Authors
 **  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
 ***********************************************************************/

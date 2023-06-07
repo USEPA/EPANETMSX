@@ -4,9 +4,7 @@
 **  DESCRIPTION:   Water quality routing routines.
 **  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
 **                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
+**  AUTHORS:       See AUTHORS
 **  VERSION:       2.0.00
 **  LAST UPDATE:   08/30/2022
 ******************************************************************************/
@@ -51,21 +49,23 @@ const double Q_STAGNANT = 0.005 / GPMperCFS;     // 0.005 gpm = 1.114e-5 cfs
 //--------------------
 int    MSXchem_open(void);
 void   MSXchem_close(void);
-int    MSXchem_react(double dt);
-int    MSXchem_equil(int zone, double *c);
+extern int    MSXchem_react(double dt);
+extern int    MSXchem_equil(int zone, int k, double *c);
 
 extern void   MSXtank_mix1(int i, double vin, double *massin, double vnet);
 extern void   MSXtank_mix2(int i, double vin, double *massin, double vnet);
 extern void   MSXtank_mix3(int i, double vin, double *massin, double vnet);
 extern void   MSXtank_mix4(int i, double vIn, double *massin, double vnet);
 
+
+
 int    MSXout_open(void);
 int    MSXout_saveResults(void);
 int    MSXout_saveFinalResults(void);
 
-void   MSXerr_clearMathError(void);                                            //1.1.00
-int    MSXerr_mathError(void);                                                 //1.1.00
-char*  MSXerr_writeMathErrorMsg(void);                                         //1.1.00
+void   MSXerr_clearMathError(void);                                            
+int    MSXerr_mathError(void);                                                 
+char*  MSXerr_writeMathErrorMsg(void);                                         
 
 //  Exported functions
 //--------------------
@@ -104,6 +104,7 @@ static int sortNodes();
 static int selectnonstacknode(int numsorted, int* indegree);
 static void findstoredmass(double* mass);
 
+static void   evalHydVariables(int k);
 //=============================================================================
 
 int  MSXqual_open()
@@ -256,7 +257,7 @@ int  MSXqual_init()
         MSX.Pattern[i].current = MSX.Pattern[i].first;
     }
 
-// --- copy expression constants to vector MSX.K[]                             //1.1.00
+// --- copy expression constants to vector MSX.K[]                             
 
     for (i=1; i<=MSX.Nobjects[CONSTANT]; i++)
     {
@@ -369,6 +370,18 @@ int MSXqual_step(double *t, double *tleft)
             if (MSX.Qtime == MSX.Htime)
             {
                 CALL(errcode, getHydVars());
+
+                for (int kl = 1; kl <= MSX.Nobjects[LINK]; kl++)
+                {
+                    // --- skip non-pipe links
+
+                    if (MSX.Link[kl].len == 0.0) continue;
+
+                    // --- evaluate hydraulic variables
+
+                    evalHydVariables(kl);
+                }
+
                 if (MSX.Qtime < MSX.Dur)
                 {
                     // --- initialize pipe segments (at time 0) or else re-orient segments
@@ -679,7 +692,7 @@ int  transport(int64_t tstep)
 
 // --- repeat until time step is exhausted
 
-    MSXerr_clearMathError();                // clear math error flag           //1.1.00
+    MSXerr_clearMathError();                // clear math error flag           
     qtime = 0;
     while (!MSX.OutOfMemory &&
            !errcode &&
@@ -695,7 +708,7 @@ int  transport(int64_t tstep)
         
         topological_transport(dt);          //replace accumulate, updateNodes, sourceInput and release
 
-		if (MSXerr_mathError())             // check for any math error        //1.1.00
+		if (MSXerr_mathError())             // check for any math error        
 		{
 			MSXerr_writeMathErrorMsg();
 			errcode = ERR_ILLEGAL_MATH;
@@ -753,7 +766,7 @@ void  initSegs()
 
     // --- fill link with a single segment of this quality
 
-        MSXchem_equil(LINK, MSX.C1);
+        MSXchem_equil(LINK, k, MSX.C1);
         v = LINKVOL(k);
         if (v > 0.0)
         {
@@ -781,7 +794,7 @@ void  initSegs()
         MSX.LastSeg[k] = NULL;
         MSX.FirstSeg[k] = NULL;
 
-        MSXchem_equil(NODE, MSX.C1);
+        MSXchem_equil(NODE, j, MSX.C1);
 
     // --- add 2 segments for 2-compartment model
 
@@ -1092,9 +1105,9 @@ void sourceInput(int n, double volout, double dt)
     }
 
     // --- compute a new chemical equilibrium at the source node
-    MSXchem_equil(NODE, MSX.Node[n].c);
+    MSXchem_equil(NODE, 0, MSX.Node[n].c);
  
-    for (m = 1; m <= MSX.Nobjects[SPECIES]; m++)   // m to SPECIES bug fix 06/10/2021
+    for (m = 1; m <= MSX.Nobjects[SPECIES]; m++)   
     {
         MSX.MassBalance.inflow[m] += MSX.SourceIn[m] * LperFT3;
     }
@@ -1373,7 +1386,6 @@ void evalnodeoutflow(int k, double * upnodequal, double tstep)
                    seg->c[m] = (seg->c[m]*seg->v+upnodequal[m]*v)/(seg->v+v);
             }
             seg->v += v;
-
             MSXqual_removeSeg(MSX.NewSeg[k]);
         }
 
@@ -1382,10 +1394,8 @@ void evalnodeoutflow(int k, double * upnodequal, double tstep)
         else
         {
             MSX.NewSeg[k]->v = v;
-
             MSXqual_addSeg(k, MSX.NewSeg[k]);
         }
-
     }
 
     // ... link has no segments so add one
@@ -1394,6 +1404,7 @@ void evalnodeoutflow(int k, double * upnodequal, double tstep)
         MSX.NewSeg[k]->v = v;
         MSXqual_addSeg(k, MSX.NewSeg[k]);
     }
+
 }
 
 
@@ -1491,7 +1502,7 @@ void findnodequal(int n, double volin, double* massin, double volout, double tst
         else 
             noflowqual(n);
 
-        MSXchem_equil(NODE, MSX.Node[n].c);
+        MSXchem_equil(NODE, 0, MSX.Node[n].c);
 
     }
     else
@@ -1504,7 +1515,7 @@ void findnodequal(int n, double volin, double* massin, double volout, double tst
             {
                 MSX.Node[n].c[m] = MSX.Node[n].c0[m];
             }
-            MSXchem_equil(NODE, MSX.Node[n].c);
+            MSXchem_equil(NODE, 0, MSX.Node[n].c);
             for (m = 1; m <= MSX.Nobjects[SPECIES]; m++)
             {
                
@@ -1935,4 +1946,64 @@ void  MSXqual_addSeg(int k, Pseg seg)
     MSX.LastSeg[k] = seg;
     if (k <= MSX.Nobjects[LINK])
         MSX.Link[k].nsegs++;
+}
+
+void evalHydVariables(int k)
+/*
+**  Purpose:
+**    retrieves current values of hydraulic variables for the
+**    current link being analyzed.
+**
+**  Input:
+**    k = link index
+**
+**  Output:
+**    updates values stored in vector HydVar[]
+*/
+{
+    double dh;                         // headloss in ft
+    double diam = MSX.Link[k].diam;    // diameter in ft
+    double length = MSX.Link[k].len;   // length in ft
+    double av;                         // area per unit volume
+
+// --- pipe diameter and length in user's units (ft or m)
+    MSX.Link[k].HydVar[DIAMETER] = diam * MSX.Ucf[LENGTH_UNITS];
+    MSX.Link[k].HydVar[LENGTH] = length * MSX.Ucf[LENGTH_UNITS];
+
+    // --- flow rate in user's units
+    MSX.Link[k].HydVar[FLOW] = fabs(MSX.Q[k]) * MSX.Ucf[FLOW_UNITS];
+
+    // --- flow velocity in ft/sec
+    if (diam == 0.0) MSX.Link[k].HydVar[VELOCITY] = 0.0;
+    else MSX.Link[k].HydVar[VELOCITY] = fabs(MSX.Q[k]) * 4.0 / PI / SQR(diam);
+
+    // --- Reynolds number
+    MSX.Link[k].HydVar[REYNOLDS] = MSX.Link[k].HydVar[VELOCITY] * diam / VISCOS;
+
+    // --- flow velocity in user's units (ft/sec or m/sec)
+    MSX.Link[k].HydVar[VELOCITY] *= MSX.Ucf[LENGTH_UNITS];
+
+    // --- Darcy Weisbach friction factor
+    if (MSX.Link[k].len == 0.0) MSX.Link[k].HydVar[FRICTION] = 0.0;
+    else
+    {
+        dh = ABS(MSX.H[MSX.Link[k].n1] - MSX.H[MSX.Link[k].n2]);
+        MSX.Link[k].HydVar[FRICTION] = 39.725 * dh * pow(diam, 5.0) /
+            MSX.Link[k].len / SQR((double)MSX.Q[k]);
+    }
+
+    // --- shear velocity in user's units (ft/sec or m/sec)
+    MSX.Link[k].HydVar[SHEAR] = MSX.Link[k].HydVar[VELOCITY] * sqrt(MSX.Link[k].HydVar[FRICTION] / 8.0);
+
+    // --- pipe surface area / volume in area_units/L
+    MSX.Link[k].HydVar[AREAVOL] = 1.0;
+    if (diam > 0.0)
+    {
+        av = 4.0 / diam;                // ft2/ft3
+        av *= MSX.Ucf[AREA_UNITS];     // area_units/ft3
+        av /= LperFT3;                 // area_units/L
+        MSX.Link[k].HydVar[AREAVOL] = av;
+    }
+
+    MSX.Link[k].HydVar[ROUGHNESS] = MSX.Link[k].roughness;
 }

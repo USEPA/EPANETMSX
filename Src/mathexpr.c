@@ -53,7 +53,7 @@
 
 #define MAX_STACK_SIZE  1024
 
-//***************************************************                          //1.1.00
+//***************************************************                         
 #define MAX_TERM_SIZE  1024
 struct MathTerm
 {
@@ -769,7 +769,7 @@ MathExpr* mathexpr_create(char* formula, int (*getVar) (char*))
 
 //=============================================================================
 
-char* mathexpr_getStr(MathExpr* expr, char* exprStr,                          //1.1.00
+char* mathexpr_getStr(MathExpr* expr, char* exprStr,                         
     char* (*getVariableStr) (int, char*))
 {
     Term TermStack[50];

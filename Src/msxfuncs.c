@@ -4,7 +4,7 @@
 **  DESCRIPTION:   compiles chemistry functions to a shared dynamic library.
 **  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
 **                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
+**  AUTHORS:       see AUTHORS
 **  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2014
 *******************************************************************************/

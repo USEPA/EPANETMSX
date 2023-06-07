@@ -8,8 +8,6 @@
 **  License:       see LICENSE
 **  VERSION:       2.0.00
 **  LAST UPDATE:   08/30/2022
-**  Bug Fix:       Bug ID 08, Feng Shang, 01/07/08 
-**                 Bug ID 09 (add roughness as hydraulic variable) Feng Shang 01/29/2008
 ***********************************************************************/
 
 #include "mathexpr.h"
@@ -209,9 +207,9 @@ typedef  float REAL4;
                   ATOL_OPTION,
                   COMPILER_OPTION,
                   MAXSEGMENT_OPTION,
-                  PECLETNUMER_OPTION};                                            //1.1.00
+                  PECLETNUMER_OPTION};                                            
 
- enum CompilerType                     // C compiler type                      //1.1.00
+ enum CompilerType                     // C compiler type                      
                  {NO_COMPILER,
                   VC,                  // MS Visual C compiler
                   GC};                 // Gnu C compiler
@@ -259,10 +257,10 @@ typedef  float REAL4;
            ERR_INVALID_OBJECT_PARAMS,  // 518
            ERR_MSX_NOT_OPENED,         // 519
            ERR_MSX_OPENED,             // 520
-           ERR_OPEN_RPT_FILE,          // 521                                  //(LR-11/20/07, to fix bug 08)           
-           ERR_COMPILE_FAILED,         // 522                                  //1.1.00
-           ERR_COMPILED_LOAD,          // 523                                  //1.1.00
-           ERR_ILLEGAL_MATH,           // 524                                  //1.1.00         
+           ERR_OPEN_RPT_FILE,          // 521                                             
+           ERR_COMPILE_FAILED,         // 522                                  
+           ERR_COMPILED_LOAD,          // 523                                  
+           ERR_ILLEGAL_MATH,           // 524                                        
            ERR_MAX};
 
 
@@ -320,8 +318,9 @@ typedef struct                         // LINK OBJECT
    double *c0;                         // initial species concentrations
    double *reacted;
    double *param;                      // kinetic parameter values
-   double roughness;		       // roughness  /*Feng Shang, Bug ID 8,  01/29/2008*/
+   double roughness;		           // roughness  
    double areasquare;
+   double HydVar[MAX_HYD_VARS];        // hydraulic variables
 }  Slink;
 
 
@@ -479,7 +478,7 @@ typedef struct                         // MSX PROJECT VARIABLES
           Saveflag,                    // Save results flag
           Rptflag,                     // Report results flag
           Coupling,                    // Degree of coupling for solving DAE's
-          Compiler,                    // chemistry function compiler code     //1.1.00 
+          Compiler,                    // chemistry function compiler code     
           AreaUnits,                   // Surface area units
           RateUnits,                   // Reaction rate time units
           Solver,                      // Choice of ODE solver
@@ -510,7 +509,7 @@ typedef struct                         // MSX PROJECT VARIABLES
    double Ucf[MAX_UNIT_TYPES],         // Unit conversion factors
           DefRtol,                     // Default relative error tolerance
           DefAtol,                     // Default absolute error tolerance
-          *K,                          // Vector of expression constants       //1.1.00
+          *K,                          // Vector of expression constants       
           *C0,                         // Species initial quality vector
           *C1;                         // Species concentration vector
 

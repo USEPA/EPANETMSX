@@ -8,9 +8,6 @@
 **  License:       see LICENSE
 **  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
-**  BUG FIXES:     BUG ID 22. MSXsetpattern, Feng Shang, 04/17/2008
-**                 File mode bug in MSXsolveH & MSXusehydfile, L. Rossman 10/05/2008
-**                 Possible unterminated string copy, L. Rossman 11/01/10
 **
 **  These functions can be used in conjunction with the original EPANET
 **  toolkit functions to model water quality fate and transport of
@@ -28,7 +25,7 @@
 #include <float.h>
 
 #include "msxtypes.h"
-#include "msxutils.h"                                                          //1.1.00
+#include "msxutils.h"                                                          
 #include "epanet2.h"
 #include "epanetmsx.h"
 
@@ -112,7 +109,7 @@ int   MSXDLLEXPORT  MSXsolveH()
 
 // --- create a temporary hydraulics file
 
-    MSXutils_getTempName(MSX.HydFile.name);                                    //1.1.00
+    MSXutils_getTempName(MSX.HydFile.name);                                    
     MSX.HydFile.mode = SCRATCH_FILE;                                           //(LR-10/05/08)
 
 // --- use EPANET to solve for & save hydraulics results
@@ -156,7 +153,7 @@ int   MSXDLLEXPORT  MSXusehydfile(char *fname)
 
 // --- open hydraulics file
 
-    //MSX.HydFile.mode = USED_FILE;                                            //(LR-10/05/08, to fix bug ??)
+    //MSX.HydFile.mode = USED_FILE;                                            
     MSX.HydFile.file = fopen(fname, "rb");
     if (!MSX.HydFile.file) return ERR_OPEN_HYD_FILE;
 

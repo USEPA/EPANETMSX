@@ -24,7 +24,7 @@ extern void  MSXqual_removeSeg(Pseg seg);
 extern Pseg  MSXqual_getFreeSeg(double v, double c[]);
 extern void  MSXqual_addSeg(int k, Pseg seg);
 extern int   MSXqual_isSame(double c1[], double c2[]);
-extern int   MSXchem_equil(int zone, double *c);
+extern int   MSXchem_equil(int zone, int k, double *c);
 extern void  MSXqual_reversesegs(int k);
 
 //  Exported functions
@@ -80,7 +80,7 @@ void  MSXtank_mix1(int i, double vin, double *massin, double vnet)
 
 // --- update species equilibrium 
 
-    if ( vin > 0.0 ) MSXchem_equil(NODE, MSX.Tank[i].c);
+    if ( vin > 0.0 ) MSXchem_equil(NODE, i, MSX.Tank[i].c);
 }
 
 //=============================================================================
@@ -182,8 +182,8 @@ void  MSXtank_mix2(int i, double vin, double *massin, double vnet)
         stagzone->v = 0.0;
     }
 
-    if (mixzone->v > 0.0) MSXchem_equil(NODE, mixzone->c);
-    if (stagzone->v > 0.0) MSXchem_equil(NODE, stagzone->c);
+    if (mixzone->v > 0.0) MSXchem_equil(NODE, i, mixzone->c);
+    if (stagzone->v > 0.0) MSXchem_equil(NODE, i, stagzone->c);
 
 // --- use quality of mixed compartment (mixzone) to represent quality
 //     of tank since this is where outflow begins to flow from

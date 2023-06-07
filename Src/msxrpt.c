@@ -6,9 +6,8 @@
 **  AUTHORS:       see AUTHORS
 **  Copyright:     see AUTHORS
 **  License:       see LICENSE
-**  VERSION:       2.2.00
+**  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
-**  BUG FIX: Bug ID 08 Feng Shang 01/07/08
 ******************************************************************************/
 
 #include <stdio.h>
@@ -65,7 +64,7 @@ float MSXout_getLinkQual(int k, int j, int m);
 //  Exported functions
 //--------------------
 int   MSXrpt_write(void);
-void  MSXrpt_writeLine(char *line);                                            //1.1.00
+void  MSXrpt_writeLine(char *line);                                            
 
 //  Local functions
 //-----------------
@@ -119,10 +118,10 @@ int  MSXrpt_write()
 
 //=============================================================================
 
-void  MSXrpt_writeLine(char *line)                                             //1.1.00
-{                                                                              //1.1.00
-    writeLine(line);                                                           //1.1.00
-}                                                                              //1.1.00
+void  MSXrpt_writeLine(char *line)                                             
+{                                                                              
+    writeLine(line);                                                           
+}                                                                              
 
 //=============================================================================
 
@@ -328,7 +327,7 @@ void  newPage()
     char  s[MAXLINE+1];
     LineNum = 1;
     sprintf(s,
-            "\nPage %-3d                                             EPANET-MSX 2.0.0",   //2.2.0
+            "\nPage %-3d                                             EPANET-MSX 2.0.0",   //2.0.0
             PageNum);
     writeLine(s);
     writeLine("");

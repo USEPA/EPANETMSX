@@ -4,7 +4,7 @@
 **  DESCRIPTION:   a second order Rosenbrock 2(1) method for solving stiff sets of
 **                 ordinary differential equations.
 **  AUTHOR:        L. Rossman, US EPA - NRMRL
-**  VERSION:       2.2.00
+**  VERSION:       2.0.00
 **  LAST UPDATE:   04/14/2021
 **
 **  This code is based on material presented in:
