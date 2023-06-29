@@ -3,18 +3,16 @@
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   Global constants and data types used by the EPANET
 **                 Multi-Species Extension toolkit.
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
-**  LAST UPDATE:   2/8/11
-**  Bug Fix:       Bug ID 08, Feng Shang, 01/07/08 
-**                 Bug ID 09 (add roughness as hydraulic variable) Feng Shang 01/29/2008
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
+**  VERSION:       2.0.00
+**  LAST UPDATE:   08/30/2022
 ***********************************************************************/
 
 #include "mathexpr.h"
+#include "mempool.h"
+#include <stdint.h>
 
 //-----------------------------------------------------------------------------
 //  Definition of 4-byte integers & reals
@@ -54,7 +52,7 @@ typedef  float REAL4;
 //  Defined Constants
 //-----------------------------------------------------------------------------
 #define   MAGICNUMBER  516114521
-#define   VERSION      100000
+#define   VERSION      200000
 #define   MAXMSG       1024            // Max. # characters in message text
 #define   MAXLINE      1024            // Max. # characters in input line
 #define   TRUE         1
@@ -95,7 +93,7 @@ typedef  float REAL4;
 //-----------------------------------------------------------------------------
 //  Enumerated Types
 //-----------------------------------------------------------------------------
- enum ObjectType                       // Object types                         //1.1.00
+ enum ObjectTypes                      // Object types
                 {NODE,
                  LINK,
                  TANK,
@@ -189,6 +187,7 @@ typedef  float REAL4;
                   FRICTION,            //   friction factor
                   AREAVOL,             //   area/volume
                   ROUGHNESS,           //   roughness                          /*Feng Shang 01/29/2008*/
+                  LENGTH,              //   pipe length                        /*Feng Shang 01/27/2023
                   MAX_HYD_VARS};
 
  enum TstatType                        // Time series statistics
@@ -206,9 +205,11 @@ typedef  float REAL4;
                   TIMESTEP_OPTION,
                   RTOL_OPTION,
                   ATOL_OPTION,
-                  COMPILER_OPTION};                                            //1.1.00
+                  COMPILER_OPTION,
+                  MAXSEGMENT_OPTION,
+                  PECLETNUMER_OPTION};                                            
 
- enum CompilerType                     // C compiler type                      //1.1.00
+ enum CompilerType                     // C compiler type                      
                  {NO_COMPILER,
                   VC,                  // MS Visual C compiler
                   GC};                 // Gnu C compiler
@@ -230,9 +231,11 @@ typedef  float REAL4;
                   s_PARAMETER,
                   s_PATTERN,
                   s_OPTION,
-                  s_REPORT};
+                  s_REPORT,
+                  s_Diffu,
+ };
 
- enum ErrorCodeType                    // Error codes (501-524)
+ enum ErrorCodeType                    // Error codes (501-525)
           {ERR_FIRST = 500,
            ERR_MEMORY,                 // 501
            ERR_NO_EPANET_FILE,         // 502
@@ -254,10 +257,10 @@ typedef  float REAL4;
            ERR_INVALID_OBJECT_PARAMS,  // 518
            ERR_MSX_NOT_OPENED,         // 519
            ERR_MSX_OPENED,             // 520
-           ERR_OPEN_RPT_FILE,          // 521                                  //(LR-11/20/07, to fix bug 08)
-           ERR_COMPILE_FAILED,         // 522                                  //1.1.00
-           ERR_COMPILED_LOAD,          // 523                                  //1.1.00
-		   ERR_ILLEGAL_MATH,           // 524                                  //1.1.00
+           ERR_OPEN_RPT_FILE,          // 521                                             
+           ERR_COMPILE_FAILED,         // 522                                  
+           ERR_COMPILED_LOAD,          // 523                                  
+           ERR_ILLEGAL_MATH,           // 524                                        
            ERR_MAX};
 
 
@@ -306,14 +309,18 @@ typedef struct                         // NODE OBJECT
 
 typedef struct                         // LINK OBJECT
 {
+   int    nsegs;                        // number of active segments   
    int    n1;                          // start node index
    int    n2;                          // end node index
    double diam;                        // diameter
    double len;                         // length
    char   rpt;                         // reporting flag
    double *c0;                         // initial species concentrations
+   double *reacted;
    double *param;                      // kinetic parameter values
-   double roughness;		       // roughness  /*Feng Shang, Bug ID 8,  01/29/2008*/
+   double roughness;		           // roughness  
+   double areasquare;
+   double HydVar[MAX_HYD_VARS];        // hydraulic variables
 }  Slink;
 
 
@@ -328,6 +335,7 @@ typedef struct                         // TANK OBJECT
    double vMix;                        // mixing compartment size
    double *param;                      // kinetic parameter values
    double *c;                          // current species concentrations
+   double *reacted;
 }  Stank;
 
 
@@ -336,8 +344,12 @@ struct Sseg                            // PIPE SEGMENT OBJECT
     double    hstep;                   // integration time step
     double    v;                       // segment volume
     double    *c;                      // species concentrations
+    double    * lastc;                 // species concentrations of previous step 
     struct    Sseg *prev;              // ptr. to previous segment
     struct    Sseg *next;              // ptr. to next segment
+    double    hresponse,               // for dispersion response of initial,
+              uresponse,               // upstream and downstream condition 
+              dresponse;    
 };
 typedef struct Sseg *Pseg;
 
@@ -388,6 +400,67 @@ typedef struct                         // FILE OBJECT
    FILE*         file;                 // FILE structure pointer
 }  TFile;
 
+
+
+struct Sadjlist           // Node Adjacency List Item
+{
+    int    node;           // index of connecting node
+    int    link;           // index of connecting link
+    struct Sadjlist* next; // next item in list
+};
+
+typedef struct Sadjlist* Padjlist; // Pointer to adjacency list
+
+typedef enum {
+    NEGATIVE = -1,  // flow in reverse of pre-assigned direction
+    ZERO_FLOW = 0,   // zero flow
+    POSITIVE = 1    // flow in pre-assigned direction
+} FlowDirection;
+
+typedef struct                 // Mass Balance Components
+{
+    double   * initial;         // initial mass in system
+    double   * inflow;          // mass inflow to system
+    double   * indisperse;      // mass dispersed into the system
+    double   * outflow;         // mass outflow from system
+    double   * reacted;         // mass reacted in system
+    double   * final;           // final mass in system
+    double   * ratio;           // ratio of mass added to mass lost
+} SmassBalance;
+
+
+typedef struct
+{
+   
+    double viscosity;
+    double DIFFUS;       // Diffusivity of chlorine 1.3E-8  @ 20 deg C (sq ft/sec)                                     
+    double PecletLimit;  // The Pectlet number below which the dispersion in a pipe is considered
+
+    int* Order;          // Node-to-row of re-ordered matrix
+    int* Row;            // Row-to-node of re-ordered matrix
+    int* Ndx;            // Index of link's coeff. in Aij
+    int* XLNZ;           // Start position of each column in NZSUB
+    int* NZSUB;          // Row index of each coeff.in each column
+    int* LNZ;            // Position of each coeff. in Aij array
+    int* Degree;         // Number of links adjacent to each node
+    int Ncoeffs;         // Number of non-zero matrix coeffs
+
+    int* link;           // Array used by linear eqn. solver
+    int* first;          // Array used by linear eqn. solver
+    double* temp;        // Array used by linear eqn. solver
+    double* Aii;         // Diagonal matrix coeffs.
+    double* Aij;         // Non-zero, off-diagonal matrix coeffs.
+    double* F;           // Right hand side vector
+    
+    Padjlist* Adjlist;   // Node adjacency lists
+
+
+    double* md;          // molecular diffusion
+    double* ld;          // fixed longitudinal dispersion coefficient
+    double* pipeDispersionCoeff;  //effective longitudinal dispersion coefficient	 
+} Sdispersion;
+
+
 typedef struct                         // MSX PROJECT VARIABLES
 {
    TFile  HydFile,                     // EPANET hydraulics file
@@ -405,7 +478,7 @@ typedef struct                         // MSX PROJECT VARIABLES
           Saveflag,                    // Save results flag
           Rptflag,                     // Report results flag
           Coupling,                    // Degree of coupling for solving DAE's
-          Compiler,                    // chemistry function compiler code     //1.1.00 
+          Compiler,                    // chemistry function compiler code     
           AreaUnits,                   // Surface area units
           RateUnits,                   // Reaction rate time units
           Solver,                      // Choice of ODE solver
@@ -414,27 +487,29 @@ typedef struct                         // MSX PROJECT VARIABLES
           ErrCode,                     // Error code
           ProjectOpened,               // Project opened flag
           QualityOpened;               // Water quality system opened flag
-
+   int    MaxSegments;                 // Maximum number of segments in a link  
    long   HydOffset,                   // Hydraulics file byte offset
-          Qstep,                       // Quality time step (sec)
           Pstep,                       // Time pattern time step (sec)
           Pstart,                      // Starting pattern time (sec)
           Rstep,                       // Reporting time step (sec)
           Rstart,                      // Time when reporting starts
-          Rtime,                       // Next reporting time (sec)
-          Htime,                       // Current hydraulic time (sec)
-          Qtime,                       // Current quality time (sec)
-          Statflag,                    // Reporting statistic flag
-          Dur;                         // Duration of simulation (sec)
+          Statflag;                    // Reporting statistic flag
+
+  int64_t Qstep,                       // Quality time step (millisec)
+          Qtime,                       // Current quality time (millisec)
+          Htime,                       // Current hydraulic time (millisec)
+          Rtime,                       // Next reporting time (millisec)
+          Dur;                         // Duration of simulation (millisec)
 
    REAL4  *D,                          // Node demands
           *H,                          // Node heads
-          *Q;                          // Link flows
+          *Q,                          // Link flows
+          *S;                          // Link status   
 
    double Ucf[MAX_UNIT_TYPES],         // Unit conversion factors
           DefRtol,                     // Default relative error tolerance
           DefAtol,                     // Default absolute error tolerance
-          *K,                          // Vector of expression constants       //1.1.00
+          *K,                          // Vector of expression constants       
           *C0,                         // Species initial quality vector
           *C1;                         // Species concentration vector
 
@@ -449,4 +524,24 @@ typedef struct                         // MSX PROJECT VARIABLES
    Slink    *Link;                     // Link data
    Stank    *Tank;                     // Tank data
    Spattern *Pattern;                  // Pattern data
+   
+   char      HasWallSpecies;           // wall species indicator
+   char      OutOfMemory;              // out of memory indicator
+   Padjlist* Adjlist;                  // Node adjacency lists
+   Pseg* NewSeg;                       // new segment added to each pipe
+   Pseg  FreeSeg;                      // pointer to unused segment
+   FlowDirection *FlowDir;             // flow direction for each pipe
+   SmassBalance MassBalance;
+   alloc_handle_t* QualPool;           // memory pool
+
+   int DispersionFlag;                 // 1 if dispersion modeling
+
+   double* MassIn;        // mass inflow of each species to each node
+   double* SourceIn;      // external mass inflow of each species from WQ source;
+   int* SortedNodes;
+  
+   Sdispersion Dispersion;
+
 } MSXproject;
+
+

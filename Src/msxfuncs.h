@@ -4,9 +4,9 @@
 **  DESCRIPTION:   Definitions of functions loaded from compiled chemistry file.
 **  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
 **                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**  VERSION:       1.1.00
-**  LAST UPDATE:   11/01/10
+**  AUTHORS:       See Authors
+**  VERSION:       2.0.00
+**  LAST UPDATE:   04/14/2021
 ***********************************************************************/
 
 #ifndef MSXFUNCS_H

@@ -3,17 +3,12 @@
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   project data manager used by the EPANET Multi-Species
 **                 Extension toolkit.
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
-**  LAST UPDATE:   2/8/11
-**  Bug fix:       Bug ID 08, Feng Shang 01/07/2008
-**                 Memory leak fixed, T. Taxon - 9/7/10
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
+**  VERSION:       2.0.00
+**  LAST UPDATE:   08/30/2022
 ******************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 
 #include <stdio.h>
 #include <string.h>
@@ -22,9 +17,11 @@
 
 #include "msxtypes.h"
 #include "msxutils.h"
-#include "mempool.h"
+//#include "mempool.h"
 #include "hash.h"
-
+#include "smatrix.h"
+#include "epanet2.h"
+#include "dispersion.h"
 //  Exported variables
 //--------------------
 MSXproject  MSX;                            // MSX project data
@@ -58,9 +55,9 @@ static char * Errmsg[] =
      "Error 520 - an MSX project is already opened.",
      "Error 521 - could not open MSX report file.",                            //(LR-11/20/07)
 
-     "Error 522 - could not compile chemistry functions.",                     //1.1.00
-     "Error 523 - could not load functions from compiled chemistry file.",     //1.1.00
-	 "Error 524 - illegal math operation."};                                   //1.1.00
+     "Error 522 - could not compile chemistry functions.",                     
+     "Error 523 - could not load functions from compiled chemistry file.",     
+     "Error 524 - illegal math operation."};                                   
 
 //  Imported functions
 //--------------------
@@ -87,6 +84,10 @@ static int    createHashTables(void);
 static void   deleteHashTables(void);
 
 static int    openRptFile(void);                                               //(LR-11/20/07)
+
+static int  buildadjlists();
+static void freeadjlists();
+
 
 //=============================================================================
 
@@ -124,17 +125,35 @@ int  MSXproj_open(char *fname)
     CALL(errcode, MSXinp_countNetObjects());
     CALL(errcode, createObjects());
 
+    MSX.DispersionFlag = 0;   //no dispersion by default, unless yes in msx file
+
 // --- read in the EPANET and MSX object data
 
     CALL(errcode, MSXinp_readNetData());
     CALL(errcode, MSXinp_readMsxData());
 
-    if (strcmp(MSX.RptFile.name, ""))                                          //(FS-01/07/2008, to fix bug 08)
-	CALL(errcode, openRptFile());                                              //(LR-11/20/07, to fix bug 08)
+    if (strcmp(MSX.RptFile.name, ""))                                              
+	CALL(errcode, openRptFile());                                              
 
 // --- convert user's units to internal units
 
     CALL(errcode, convertUnits());
+
+    if (MSX.DispersionFlag != 0)
+    {
+        float relvis;
+        ENgetoption(13, &relvis);
+        MSX.Dispersion.viscosity = relvis * 1.1E-5;
+
+        createsparse();   //symmetric matrix
+    }
+
+    // Build nodal adjacency lists 
+    if (errcode == 0 && MSX.Adjlist == NULL)
+    {
+        errcode = buildadjlists();   //parallel links are included
+        if (errcode) return errcode;
+    }
 
 // --- close input file
 
@@ -207,7 +226,7 @@ int   MSXproj_addObject(int type, char *id, int n)
 // --- use memory from the hash tables' common memory pool to store
 //     a copy of the object's ID string
 
-    len = strlen(id) + 1;
+    len = (int)strlen(id) + 1;
     newID = (char *) Alloc(len*sizeof(char));
     strcpy(newID, id);
 
@@ -290,8 +309,8 @@ void setDefaults()
     MSX.OutFile.file = NULL;
     MSX.OutFile.mode = SCRATCH_FILE;
     MSX.TmpOutFile.file = NULL;
-    MSXutils_getTempName(MSX.OutFile.name);                                    //1.1.00
-    MSXutils_getTempName(MSX.TmpOutFile.name);                                 //1.1.00
+    MSXutils_getTempName(MSX.OutFile.name);                                    
+    MSXutils_getTempName(MSX.TmpOutFile.name);                                 
     strcpy(MSX.RptFile.name, "");
     strcpy(MSX.Title, "");
     MSX.Rptflag = 0;
@@ -303,10 +322,11 @@ void setDefaults()
     MSX.DefAtol = 0.01;
     MSX.Solver = EUL;
     MSX.Coupling = NO_COUPLING;
-    MSX.Compiler = NO_COMPILER;                                                //1.1.00
+    MSX.Compiler = NO_COMPILER;                                                
+    MSX.ErrCode = 0;
     MSX.AreaUnits = FT2;
     MSX.RateUnits = DAYS;
-    MSX.Qstep = 300;
+    MSX.Qstep = 300*1000;   // 300,000 millisec = 5 minutes
     MSX.Rstep = 3600;
     MSX.Rstart = 0;
     MSX.Dur = 0;
@@ -316,11 +336,12 @@ void setDefaults()
     MSX.D = NULL;
     MSX.Q = NULL;
     MSX.H = NULL;
+    MSX.S = NULL;
     MSX.Species = NULL;
     MSX.Term = NULL;
     MSX.Const = NULL;
     MSX.Pattern = NULL;
-    MSX.K = NULL;                                                              //1.1.00
+    MSX.K = NULL;                                                              
 }
 
 //=============================================================================
@@ -435,13 +456,14 @@ int createObjects()
     MSX.Param   = (Sparam *)   calloc(MSX.Nobjects[PARAMETER]+1, sizeof(Sparam));
     MSX.Const   = (Sconst *)   calloc(MSX.Nobjects[CONSTANT]+1, sizeof(Sconst));
     MSX.Pattern = (Spattern *) calloc(MSX.Nobjects[PATTERN]+1, sizeof(Spattern));
-    MSX.K       = (double *)   calloc(MSX.Nobjects[CONSTANT]+1, sizeof(double));  //1.1.00
+    MSX.K       = (double *)   calloc(MSX.Nobjects[CONSTANT]+1, sizeof(double));  
 
 // --- create arrays for demands, heads, & flows
 
     MSX.D = (float *) calloc(MSX.Nobjects[NODE]+1, sizeof(float));
     MSX.H = (float *) calloc(MSX.Nobjects[NODE]+1, sizeof(float));
     MSX.Q = (float *) calloc(MSX.Nobjects[LINK]+1, sizeof(float));
+    MSX.S = (float *) calloc(MSX.Nobjects[LINK] + 1, sizeof(float));
 
 // --- create arrays for current & initial concen. of each species for each node
 
@@ -459,6 +481,8 @@ int createObjects()
     {
         MSX.Link[i].c0 = (double *)
             calloc(MSX.Nobjects[SPECIES]+1, sizeof(double));
+        MSX.Link[i].reacted = (double *)
+            calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
         MSX.Link[i].param = (double *)
             calloc(MSX.Nobjects[PARAMETER]+1, sizeof(double));
         MSX.Link[i].rpt = 0;
@@ -472,6 +496,8 @@ int createObjects()
             calloc(MSX.Nobjects[PARAMETER]+1, sizeof(double));
         MSX.Tank[i].c = (double *)
             calloc(MSX.Nobjects[SPECIES]+1, sizeof(double));
+        MSX.Tank[i].reacted = (double*)
+            calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
     }
 
 // --- initialize contents of each time pattern object
@@ -498,6 +524,20 @@ int createObjects()
 // --- initialize math expressions for each intermediate term
 
     for (i=1; i<=MSX.Nobjects[TERM]; i++) MSX.Term[i].expr = NULL;
+
+    MSX.MaxSegments = MAXSEGMENTS;
+    MSX.Dispersion.PecletLimit = 1000.00;
+    MSX.Dispersion.DIFFUS = 1.29E-8;
+    MSX.Dispersion.md = (double*)
+        calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
+    MSX.Dispersion.ld = (double*)
+        calloc(MSX.Nobjects[SPECIES] + 1, sizeof(double));
+
+    for (int m = 1; m <= MSX.Nobjects[SPECIES]; m++)
+    {
+        MSX.Dispersion.md[m] = -1.0;
+        MSX.Dispersion.ld[m] = -1.0;
+    }
     return 0;
 }
 
@@ -514,7 +554,6 @@ void deleteObjects()
 {
     int i;
     SnumList *listItem;
-    Psource  source;                                                           //ttaxon - 9/7/10
 
 // --- free memory used by nodes, links, and tanks
 
@@ -522,34 +561,33 @@ void deleteObjects()
     {
         FREE(MSX.Node[i].c);
         FREE(MSX.Node[i].c0);
-
-        // --- free memory used by water quality sources                       //ttaxon - 9/7/10
-
-	if(MSX.Node[i].sources)
-	{ 
-            source = MSX.Node[i].sources; 
-            while (source != NULL)
-	    { 
-                MSX.Node[i].sources = source->next; 
-                FREE(source); 
-                source = MSX.Node[i].sources; 
-            } 
-        }
-
+		if(MSX.Node[i].sources) 
+		{
+			struct Ssource *p=MSX.Node[i].sources;
+			while(p != NULL) 
+			{
+				MSX.Node[i].sources=p->next;
+				FREE(p);
+				p=MSX.Node[i].sources;
+			}
+		}
     }
     if (MSX.Link) for (i=1; i<=MSX.Nobjects[LINK]; i++)
     {
         FREE(MSX.Link[i].c0);
         FREE(MSX.Link[i].param);
+        FREE(MSX.Link[i].reacted);
     }
     if (MSX.Tank) for (i=1; i<=MSX.Nobjects[TANK]; i++)
     {
         FREE(MSX.Tank[i].param);
         FREE(MSX.Tank[i].c);
+        FREE(MSX.Tank[i].reacted);
     }
 
-// --- free memory used by time patterns
+    freeadjlists();
 
+    // --- free memory used by time patterns
     if (MSX.Pattern) for (i=1; i<=MSX.Nobjects[PATTERN]; i++)
     {
         listItem = MSX.Pattern[i].first;
@@ -567,6 +605,7 @@ void deleteObjects()
     FREE(MSX.D);
     FREE(MSX.H);
     FREE(MSX.Q);
+    FREE(MSX.S);
     FREE(MSX.C0);
 
 // --- delete all nodes, links, and tanks
@@ -593,7 +632,7 @@ void deleteObjects()
     FREE(MSX.Species);
     FREE(MSX.Param);
     FREE(MSX.Const);
-    FREE(MSX.K);                                                               //1.1.00
+    FREE(MSX.K);                                                               
 
 // --- free memory used by intermediate terms
 
@@ -669,4 +708,84 @@ int openRptFile()
     if ( MSX.RptFile.file == NULL ) return ERR_OPEN_RPT_FILE;
     return 0;
 }
-    
+
+int  buildadjlists()   //from epanet for node sorting in WQ routing
+/*
+**--------------------------------------------------------------
+** Input:   none
+** Output:  returns error code
+** Purpose: builds linked list of links adjacent to each node
+**--------------------------------------------------------------
+*/
+{
+    int       i, j, k;
+    int       errcode = 0;
+    Padjlist  alink;
+
+    // Create an array of adjacency lists
+    freeadjlists();
+    MSX.Adjlist = (Padjlist*)calloc(MSX.Nobjects[NODE]+1, sizeof(Padjlist));
+    if (MSX.Adjlist == NULL) return 101;
+    for (i = 0; i <= MSX.Nobjects[NODE]; i++) 
+        MSX.Adjlist[i] = NULL;
+
+    // For each link, update adjacency lists of its end nodes
+    for (k = 1; k <= MSX.Nobjects[LINK]; k++)
+    {
+        i = MSX.Link[k].n1;
+        j = MSX.Link[k].n2;
+
+        // Include link in start node i's list
+        alink = (struct Sadjlist*) malloc(sizeof(struct Sadjlist));
+        if (alink == NULL)
+        {
+            errcode = 101;
+            break;
+        }
+        alink->node = j;
+        alink->link = k;
+        alink->next = MSX.Adjlist[i];
+        MSX.Adjlist[i] = alink;
+
+        // Include link in end node j's list
+        alink = (struct Sadjlist*) malloc(sizeof(struct Sadjlist));
+        if (alink == NULL)
+        {
+            errcode = 101;
+            break;
+        }
+        alink->node = i;
+        alink->link = k;
+        alink->next = MSX.Adjlist[j];
+        MSX.Adjlist[j] = alink;
+    }
+    if (errcode) freeadjlists();
+    return errcode;
+}
+
+
+void  freeadjlists()            //from epanet for node sorting in WQ routing
+/*
+**--------------------------------------------------------------
+** Input:   none
+** Output:  none
+** Purpose: frees memory used for nodal adjacency lists
+**--------------------------------------------------------------
+*/
+{
+    int   i;
+    Padjlist alink;
+
+    if (MSX.Adjlist == NULL) return;
+    for (i = 0; i <= MSX.Nobjects[NODE]; i++)
+    {
+        for (alink = MSX.Adjlist[i]; alink != NULL; alink = MSX.Adjlist[i])
+        {
+            MSX.Adjlist[i] = alink->next;
+            free(alink);
+        }
+    }
+    free(MSX.Adjlist);
+    MSX.Adjlist = NULL;
+}
+

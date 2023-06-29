@@ -52,7 +52,7 @@ Arsenic Oxidation/Adsorption Example
 [REPORT]
   NODES   C   D                ;Report results for nodes C and D
   LINKS   5                    ;Report results for pipe 5
-  SPECIE  AStot YES            ;Report results for each specie
-  SPECIE  AS5   YES
-  SPECIE  AS5s  YES
-  SPECIE  NH2CL YES
+  SPECIES  AStot YES            ;Report results for each specie
+  SPECIES  AS5   YES
+  SPECIES  AS5s  YES
+  SPECIES  NH2CL YES

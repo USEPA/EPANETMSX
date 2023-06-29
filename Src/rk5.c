@@ -4,8 +4,8 @@
 **  DESCRIPTION:   Numerical solution of a system of first order
 **                 ordinary differential equations dY/dt = F(t,Y).
 **  AUTHOR:        L. Rossman, US EPA - NRMRL
-**  VERSION:       1.1.00                                               
-**  LAST UPDATE:   3/1/07
+**  VERSION:       2.0.00                                               
+**  LAST UPDATE:   04/14/2021
 **
 **  This is an explicit Runge-Kutta method of order (4)5  
 **  due to Dormand & Prince (with optional stepsize control).
@@ -26,19 +26,9 @@
 
 //  Local variables
 //-----------------
-int      Nmax;          // max. number of equations
-int      Itmax;         // max. number of integration steps
-int      Adjust;        // use adjustable step size
-double   *Ak;           // work arrays
-double   *K1;
-double   *K2;
-double   *K3;
-double   *K4;
-double   *K5;
-double   *K6;
-double   *Ynew;         // updated solution
-void     (*Report) (double, double*, int);
+MSXRungeKutta MSXRungeKuttaSolver;
 
+#pragma omp threadprivate(MSXRungeKuttaSolver)
 //=============================================================================
 
 int rk5_open(int n, int itmax, int adjust)
@@ -56,21 +46,31 @@ int rk5_open(int n, int itmax, int adjust)
 */
 {
     int n1 = n+1;
-    Report = NULL;
-    Nmax  = 0;
-    Itmax = itmax;
-    Adjust = adjust;
-    Ynew  = (double *) calloc(n1, sizeof(double));
-    Ak    = (double *) calloc(6*n1, sizeof(double));
-    if ( !Ynew || !Ak ) return 0;
-    Nmax = n;
-    K1 = (Ak);
-    K2 = ((Ak)+(n1));
-    K3 = ((Ak)+(2*n1));
-    K4 = ((Ak)+(3*n1));
-    K5 = ((Ak)+(4*n1));
-    K6 = ((Ak)+(5*n1));
-    return 1;
+    int errorcode = 1;
+    MSXRungeKuttaSolver.Report = NULL;
+
+#pragma omp parallel
+{
+    MSXRungeKuttaSolver.Nmax = 0;
+    MSXRungeKuttaSolver.Itmax = itmax;
+    MSXRungeKuttaSolver.Adjust = adjust;
+    MSXRungeKuttaSolver.Ynew = (double*)calloc(n1, sizeof(double));
+    MSXRungeKuttaSolver.Ak = (double*)calloc(6 * n1, sizeof(double));
+#pragma omp critical
+    {
+         if (!MSXRungeKuttaSolver.Ynew || !MSXRungeKuttaSolver.Ak) errorcode = 0;
+    }
+
+    MSXRungeKuttaSolver.Nmax = n;
+    MSXRungeKuttaSolver.K1 = (MSXRungeKuttaSolver.Ak);
+    MSXRungeKuttaSolver.K2 = ((MSXRungeKuttaSolver.Ak)+(n1));
+    MSXRungeKuttaSolver.K3 = ((MSXRungeKuttaSolver.Ak)+(2 * n1));
+    MSXRungeKuttaSolver.K4 = ((MSXRungeKuttaSolver.Ak)+(3 * n1));
+    MSXRungeKuttaSolver.K5 = ((MSXRungeKuttaSolver.Ak)+(4 * n1));
+    MSXRungeKuttaSolver.K6 = ((MSXRungeKuttaSolver.Ak)+(5 * n1));
+}
+
+    return errorcode;
 }
 
 //=============================================================================
@@ -81,12 +81,17 @@ void rk5_close()
 **    Closes the RK5 solver.
 */
 {
-    if ( Ynew ) free(Ynew);
-    Ynew = NULL;
-    if ( Ak ) free(Ak);
-    Ak = NULL;
-    Nmax = 0;
-    Report = NULL;
+
+#pragma omp parallel
+{
+    if (MSXRungeKuttaSolver.Ynew) free(MSXRungeKuttaSolver.Ynew);
+    MSXRungeKuttaSolver.Ynew = NULL;
+    if (MSXRungeKuttaSolver.Ak) free(MSXRungeKuttaSolver.Ak);
+    MSXRungeKuttaSolver.Ak = NULL;
+    MSXRungeKuttaSolver.Nmax = 0;
+    MSXRungeKuttaSolver.Report = NULL;
+}
+
 }
 
 //=============================================================================
@@ -153,11 +158,11 @@ int rk5_integrate(double y[], int n, double t, double tnext,
     int    naccpt = 0;
     int    nrejct = 0;
     int    reject = 0;
-    int    adjust = Adjust;
+    int    adjust = MSXRungeKuttaSolver.Adjust;
 
 // --- initial function evaluation
 
-    func(t, y, n, K1);
+    func(t, y, n, MSXRungeKuttaSolver.K1);
     nfcn++;
 
 // --- initial step size
@@ -170,7 +175,8 @@ int rk5_integrate(double y[], int n, double t, double tnext,
         for (i=1; i<=n; i++)
         {
             ytol = atol[i] + rtol[i]*fabs(y[i]);
-            if (K1[i] != 0.0) h = fmin(h, (ytol/fabs(K1[i])));
+            if (MSXRungeKuttaSolver.K1[i] != 0.0)
+                h = fmin(h, (ytol/fabs(MSXRungeKuttaSolver.K1[i])));
         }
     }
     h = fmax(1.e-8, h);
@@ -187,34 +193,34 @@ int rk5_integrate(double y[], int n, double t, double tnext,
 
         tnew = t + c2*h;
         for (i=1; i<=n; i++)
-            Ynew[i] = y[i] + h*a21*K1[i];
-        func(tnew, Ynew, n, K2);
+            MSXRungeKuttaSolver.Ynew[i] = y[i] + h*a21* MSXRungeKuttaSolver.K1[i];
+        func(tnew, MSXRungeKuttaSolver.Ynew, n, MSXRungeKuttaSolver.K2);
 
         tnew = t + c3*h;
         for (i=1; i<=n; i++)
-            Ynew[i] = y[i] + h*(a31*K1[i] + a32*K2[i]);
-        func(tnew, Ynew, n, K3);
+            MSXRungeKuttaSolver.Ynew[i] = y[i] + h*(a31* MSXRungeKuttaSolver.K1[i] + a32* MSXRungeKuttaSolver.K2[i]);
+        func(tnew, MSXRungeKuttaSolver.Ynew, n, MSXRungeKuttaSolver.K3);
 
         tnew = t + c4*h;
         for (i=1; i<=n; i++)
-            Ynew[i]=y[i] + h*(a41*K1[i] + a42*K2[i] + a43*K3[i]);
-        func(tnew, Ynew, n, K4);
+            MSXRungeKuttaSolver.Ynew[i]=y[i] + h*(a41* MSXRungeKuttaSolver.K1[i] + a42* MSXRungeKuttaSolver.K2[i] + a43* MSXRungeKuttaSolver.K3[i]);
+        func(tnew, MSXRungeKuttaSolver.Ynew, n, MSXRungeKuttaSolver.K4);
 
         tnew = t + c5*h;
         for (i=1; i<=n; i++)
-            Ynew[i] = y[i] + h*(a51*K1[i] + a52*K2[i] + a53*K3[i]+a54*K4[i]);
-        func(tnew, Ynew, n, K5);
+            MSXRungeKuttaSolver.Ynew[i] = y[i] + h*(a51* MSXRungeKuttaSolver.K1[i] + a52* MSXRungeKuttaSolver.K2[i] + a53* MSXRungeKuttaSolver.K3[i]+a54* MSXRungeKuttaSolver.K4[i]);
+        func(tnew, MSXRungeKuttaSolver.Ynew, n, MSXRungeKuttaSolver.K5);
 
         tnew = t + h;
         for (i=1; i<=n; i++)
-            Ynew[i] = y[i] + h*(a61*K1[i] + a62*K2[i] + 
-	                  a63*K3[i] + a64*K4[i] + a65*K5[i]);
-        func(tnew, Ynew, n, K6);
+            MSXRungeKuttaSolver.Ynew[i] = y[i] + h*(a61* MSXRungeKuttaSolver.K1[i] + a62* MSXRungeKuttaSolver.K2[i] +
+	                  a63* MSXRungeKuttaSolver.K3[i] + a64* MSXRungeKuttaSolver.K4[i] + a65* MSXRungeKuttaSolver.K5[i]);
+        func(tnew, MSXRungeKuttaSolver.Ynew, n, MSXRungeKuttaSolver.K6);
 
         for (i=1; i<=n; i++)
-            Ynew[i] = y[i] + h*(a71*K1[i] + a73*K3[i] + 
-	                  a74*K4[i] + a75*K5[i] + a76*K6[i]);
-        func(tnew, Ynew, n, K2);
+            MSXRungeKuttaSolver.Ynew[i] = y[i] + h*(a71* MSXRungeKuttaSolver.K1[i] + a73* MSXRungeKuttaSolver.K3[i] +
+	                  a74* MSXRungeKuttaSolver.K4[i] + a75* MSXRungeKuttaSolver.K5[i] + a76* MSXRungeKuttaSolver.K6[i]);
+        func(tnew, MSXRungeKuttaSolver.Ynew, n, MSXRungeKuttaSolver.K2);
         nfcn += 6;
 
     // --- step size adjustment
@@ -224,13 +230,13 @@ int rk5_integrate(double y[], int n, double t, double tnext,
         if (adjust)
         {
             for (i=1; i<=n; i++)
-                K4[i] = (e1*K1[i] + e3*K3[i] + e4*K4[i] + e5*K5[i] +
-                         e6*K6[i] + e7*K2[i])*h;
+                MSXRungeKuttaSolver.K4[i] = (e1* MSXRungeKuttaSolver.K1[i] + e3* MSXRungeKuttaSolver.K3[i] + e4* MSXRungeKuttaSolver.K4[i] + e5* MSXRungeKuttaSolver.K5[i] +
+                         e6* MSXRungeKuttaSolver.K6[i] + e7* MSXRungeKuttaSolver.K2[i])*h;
  
             for (i=1; i<=n; i++)
             {
-                sk = atol[i] + rtol[i]*fmax(fabs(y[i]), fabs(Ynew[i]));
-                sk = K4[i]/sk;
+                sk = atol[i] + rtol[i]*fmax(fabs(y[i]), fabs(MSXRungeKuttaSolver.Ynew[i]));
+                sk = MSXRungeKuttaSolver.K4[i]/sk;
                 err = err + (sk*sk);
             }
             err = sqrt(err/n);
@@ -250,15 +256,15 @@ int rk5_integrate(double y[], int n, double t, double tnext,
             naccpt++;
             for (i=1; i<=n; i++)
             {
-                K1[i] = K2[i];
-                y[i] = Ynew[i];
+                MSXRungeKuttaSolver.K1[i] = MSXRungeKuttaSolver.K2[i];
+                y[i] = MSXRungeKuttaSolver.Ynew[i];
             }
             t = t + h;
             if ( adjust && t <= tnext ) *htry = h;
             if (fabs(hnew) > hmax) hnew = hmax; 
             if (reject) hnew = fmin(fabs(hnew), fabs(h));
             reject = 0;
-            if (Report) Report(t, y, n);
+            if (MSXRungeKuttaSolver.Report) MSXRungeKuttaSolver.Report(t, y, n);
         } 
   
     // --- step is rejected
@@ -275,7 +281,7 @@ int rk5_integrate(double y[], int n, double t, double tnext,
         h = hnew;
         if ( adjust ) *htry = h;
         nstep++;
-        if (nstep >= Itmax) return -1;
+        if (nstep >= MSXRungeKuttaSolver.Itmax) return -1;
     }
     return nfcn;
 }

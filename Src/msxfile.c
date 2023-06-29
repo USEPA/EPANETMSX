@@ -2,22 +2,12 @@
 **  MODULE:        MSXFILE.C
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   writes MSX project data to a MSX input file.
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
-**  LAST UPDATE:   09/12/08
-**  BUG FIX:       Bug ID 10, Feng Shang, 01/08/2008
-				   
-				   In funtcion saveSources, MSX.Pattern[source->pat].id rather 
-				   than MSX.Pattern[source->pat] should be printed, 09/12/08 FS
-				   
-				   BUG ID 53, check if the source type > -1 before saving. 
-				   FS 09/23/08 
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
+**  VERSION:       2.0.00
+**  LAST UPDATE:   04/14/2021
 *******************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 
 #include <stdio.h>
 #include <string.h>
@@ -206,7 +196,7 @@ void  saveQuality(FILE *f)
         }
         for (i=1; i<=MSX.Nobjects[LINK]; i++)
         {
-            if ( MSX.Link[i].c0[j] > 0.0 && MSX.Link[i].c0[j] != MSX.C0[j])			//(FS-01/08/2008, bug fix)
+            if ( MSX.Link[i].c0[j] > 0.0 && MSX.Link[i].c0[j] != MSX.C0[j])			
             {
                 ENgetlinkid(i, id);
                 fprintf(f, "\nLINK    %-32s  %-32s  %e",

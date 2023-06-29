@@ -3,16 +3,14 @@
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   Header file for the utility functions used by the EPANET
 **                 Multi-Species Extension toolkit.
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
+**  VERSION:       2.0.00
 **  LAST UPDATE:   2/8/11
 *******************************************************************************/
 
-// Gets the name of a temporary file                                           //1.1.00
+// Gets the name of a temporary file                                           
 char * MSXutils_getTempName(char *s);
 
 // Case insentive comparison of two strings

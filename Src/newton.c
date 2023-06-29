@@ -3,13 +3,11 @@
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   Newton-Raphson algorithm used to solve a set of nonlinear
 **                 algebraic equations.
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
-**  LAST UPDATE:   3/1/07
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
+**  VERSION:       2.0.00
+**  LAST UPDATE:   04/14/2021
 ******************************************************************************/
 
 #include <stdio.h>
@@ -21,11 +19,9 @@
 
 // Local declarations
 //-------------------
-static int      Nmax;          // max. number of equations
-static int      *Indx;         // permutation vector of row indexes     
-static double   *F;            // function & adjustment vector
-static double   *W;            // work vector
-static double   **J;           // Jacobian matrix
+MSXNewton MSXNewtonSolver;
+
+#pragma omp threadprivate(MSXNewtonSolver)
 
 //=============================================================================
 
@@ -33,9 +29,9 @@ int newton_open(int n)
 /*
 **  Purpose:
 **    opens the algebraic solver to handle a system of n equations.
-**            
+**
 **  Input:
-**    n = number of equations 
+**    n = number of equations
 **
 **  Returns:
 **    1 if successful, 0 if not.
@@ -45,35 +41,50 @@ int newton_open(int n)
 **    must be allocated for the unused 0-th position.
 */
 {
-    Nmax    = 0;
-    Indx    = NULL;
-    F       = NULL;
-    W       = NULL;
-	Indx	= (int *) calloc(n+1, sizeof(int));
-    F   	= (double *) calloc(n+1, sizeof(double));
-    W		= (double *) calloc(n+1, sizeof(double));
-    J       = createMatrix(n+1, n+1);	
-    if ( !Indx || !F || !W || !J ) return 0;
-    Nmax = n;
-    return 1;
+    int errorcode = 1;
+
+#pragma omp parallel
+{
+    MSXNewtonSolver.Nmax = 0;
+    MSXNewtonSolver.Indx = NULL;
+    MSXNewtonSolver.F = NULL;
+    MSXNewtonSolver.W = NULL;
+    MSXNewtonSolver.Indx = (int*)calloc(n + 1, sizeof(int));
+    MSXNewtonSolver.F = (double*)calloc(n + 1, sizeof(double));
+    MSXNewtonSolver.W = (double*)calloc(n + 1, sizeof(double));
+    MSXNewtonSolver.J = createMatrix(n + 1, n + 1);
+#pragma omp critical
+    {
+        if (!MSXNewtonSolver.Indx || !MSXNewtonSolver.F || !MSXNewtonSolver.W || !MSXNewtonSolver.J) 
+            errorcode = 0;
+    }
+    MSXNewtonSolver.Nmax = n;
+}
+
+    return errorcode;
 }
 
 //=============================================================================
 
-void newton_close ()
+void newton_close()
 /*
 **  Purpose:
 **    closes the algebraic solver.
 **
 **  Input:
-**    none 
+**    none
 */
 {
-	if (Indx) { free(Indx); Indx = NULL; }
-	if (F)    { free(F); F = NULL; }
-	if (W)    { free(W); W = NULL; }
-	freeMatrix(J);
-	J = NULL;
+
+#pragma omp parallel
+{
+    if (MSXNewtonSolver.Indx) { free(MSXNewtonSolver.Indx); MSXNewtonSolver.Indx = NULL; }
+    if (MSXNewtonSolver.F) { free(MSXNewtonSolver.F); MSXNewtonSolver.F = NULL; }
+    if (MSXNewtonSolver.W) { free(MSXNewtonSolver.W); MSXNewtonSolver.W = NULL; }
+    freeMatrix(MSXNewtonSolver.J);
+    MSXNewtonSolver.J = NULL;
+}
+
 }
 
 //=============================================================================
@@ -108,7 +119,7 @@ int newton_solve(double x[], int n, int maxit, int numsig,
 
     // --- check that system was sized adequetely
 
-    if ( n > Nmax ) return -3;
+    if ( n > MSXNewtonSolver.Nmax ) return -3;
 
     // --- use up to maxit iterations to find a solution
 
@@ -116,16 +127,16 @@ int newton_solve(double x[], int n, int maxit, int numsig,
 	{
         // --- evaluate the Jacobian matrix
 
-        jacobian(x, n, F, W, J, func);
+        jacobian(x, n, MSXNewtonSolver.F, MSXNewtonSolver.W, MSXNewtonSolver.J, func);
 
         // --- factorize the Jacobian
 
-        if ( !factorize(J, n, W, Indx) ) return -1;
+        if ( !factorize(MSXNewtonSolver.J, n, MSXNewtonSolver.W, MSXNewtonSolver.Indx) ) return -1;
 
         // --- solve for the updates to x (returned in F)
 
-		for (i=1; i<=n; i++) F[i] = -F[i]; 
-        solve(J, n, Indx, F);
+		for (i=1; i<=n; i++) MSXNewtonSolver.F[i] = -MSXNewtonSolver.F[i];
+        solve(MSXNewtonSolver.J, n, MSXNewtonSolver.Indx, MSXNewtonSolver.F);
 		
 		// --- update solution x & check for convergence
 
@@ -134,8 +145,8 @@ int newton_solve(double x[], int n, int maxit, int numsig,
         {
 			cscal = x[i];
             if (cscal < relconvg) cscal = relconvg;
-			x[i] += F[i];
-            errx = fabs(F[i]/cscal);
+			x[i] += MSXNewtonSolver.F[i];
+            errx = fabs(MSXNewtonSolver.F[i]/cscal);
             if (errx > errmax) errmax = errx;
         }
 		if (errmax <= relconvg) return k;

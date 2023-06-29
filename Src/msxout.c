@@ -3,15 +3,12 @@
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   I/O routines for the binary output file used by the
 **                 EPANET Multi-Species Extension toolkit.         
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
-**  LAST UPDATE:   7/31/07
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
+**  VERSION:       2.0.00
+**  LAST UPDATE:   08/30/2022
 ******************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 
 #include <stdio.h>
 #include <string.h>
@@ -124,13 +121,10 @@ int MSXout_saveInitialResults()
     fwrite(&n, sizeof(INT4), 1, f);                         //Reporting step size
     for (m=1; m<=MSX.Nobjects[SPECIES]; m++)
     {
-        n = strlen(MSX.Species[m].id);
+        n = (INT4)strlen(MSX.Species[m].id);
         fwrite(&n, sizeof(INT4), 1, f);                     //Length of species ID
-        fwrite(MSX.Species[m].id, sizeof(char), n, f);      //Species ID string
-    }
-    for (m=1; m<=MSX.Nobjects[SPECIES]; m++)
-    {                                                       //Species mass units
-        fwrite(&MSX.Species[m].units, sizeof(char), MAXUNITS, f);
+        fwrite(MSX.Species[m].id, sizeof(char), n, f);      //Species ID string                                                   
+        fwrite(&MSX.Species[m].units, sizeof(char), MAXUNITS, f);   //Species mass units
     }
     ResultsOffset = ftell(f);
     NodeBytesPerPeriod = MSX.Nobjects[NODE]*MSX.Nobjects[SPECIES]*sizeof(REAL4);
@@ -159,7 +153,6 @@ int MSXout_saveResults()
 {
     int   m, j;
     REAL4 x;
-
     for (m=1; m<=MSX.Nobjects[SPECIES]; m++)
     {
         for (j=1; j<=MSX.Nobjects[NODE]; j++)

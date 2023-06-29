@@ -3,16 +3,12 @@
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   report writing routines for the EPANET Multi-Species
 **                 Extension toolkit.
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
-**  LAST UPDATE:   2/8/11
-**  BUG FIX: Bug ID 08 Feng Shang 01/07/08
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
+**  VERSION:       2.0.00
+**  LAST UPDATE:   04/14/2021
 ******************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 
 #include <stdio.h>
 #include <string.h>
@@ -38,7 +34,7 @@ static char *Logo[] =
      "*                      E P A N E T  -  M S X                     *",
      "*                   Multi-Species Water Quality                  *",
      "*                   Analysis for Pipe  Networks                  *",
-     "*                           Version 1.1                          *",     //1.1.00
+     "*                           Version 2.0.0                        *",     //2.0.00
      "******************************************************************"};
 
 static char PageHdr[] = "  Page %d                                    ";
@@ -68,7 +64,7 @@ float MSXout_getLinkQual(int k, int j, int m);
 //  Exported functions
 //--------------------
 int   MSXrpt_write(void);
-void  MSXrpt_writeLine(char *line);                                            //1.1.00
+void  MSXrpt_writeLine(char *line);                                            
 
 //  Local functions
 //-----------------
@@ -81,6 +77,8 @@ static void  writeLinkTable(int j, int tableType);
 static void  getHrsMins(int k, int *hrs, int *mins);
 static void  newPage(void);
 static void  writeLine(char *line);
+
+static void writemassbalance();
 
 //=============================================================================
 
@@ -111,16 +109,19 @@ int  MSXrpt_write()
 
     if ( MSX.Statflag == SERIES ) createSeriesTables();
     else createStatsTables();
+
+    writemassbalance();
+
     writeLine("");
     return 0;
 }
 
 //=============================================================================
 
-void  MSXrpt_writeLine(char *line)                                             //1.1.00
-{                                                                              //1.1.00
-    writeLine(line);                                                           //1.1.00
-}                                                                              //1.1.00
+void  MSXrpt_writeLine(char *line)                                             
+{                                                                              
+    writeLine(line);                                                           
+}                                                                              
 
 //=============================================================================
 
@@ -326,7 +327,7 @@ void  newPage()
     char  s[MAXLINE+1];
     LineNum = 1;
     sprintf(s,
-            "\nPage %-3d                                             EPANET-MSX 1.1",   //1.1.00
+            "\nPage %-3d                                             EPANET-MSX 2.0.0",   //2.0.0
             PageNum);
     writeLine(s);
     writeLine("");
@@ -343,3 +344,57 @@ void  writeLine(char *line)
     else ENwriteline(line);
     LineNum++;
 }
+
+
+void writemassbalance()
+/*
+**-------------------------------------------------------------
+**   Input:   none
+**   Output:  none
+**   Purpose: writes water quality mass balance ratio
+**            (Outflow + Final Storage) / Inflow + Initial Storage)
+**            to report file.
+**-------------------------------------------------------------
+*/
+{
+
+    char s1[MAXMSG + 1];
+    int  kunits = 0;
+
+    for (int m = 1; m <= MSX.Nobjects[SPECIES]; m++)
+    {
+        if (MSX.Species[m].pipeExprType != RATE)
+            continue;
+        
+        snprintf(s1, MAXMSG, "\n");
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "Water Quality Mass Balance: %s (%s)", MSX.Species[m].id, MSX.Species[m].units);
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "================================");
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "Initial Mass:      %12.5e", MSX.MassBalance.initial[m]);
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "Mass Inflow:       %12.5e", MSX.MassBalance.inflow[m]+ MSX.MassBalance.indisperse[m]);
+        writeLine(s1);
+    //    snprintf(s1, MAXMSG, "Mass Dispersed Inflow:       %12.5e", MSX.MassBalance.indisperse[m]);
+    //    writeLine(s1);
+        snprintf(s1, MAXMSG, "Mass Outflow:      %12.5e", MSX.MassBalance.outflow[m]);
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "Mass Reacted:      %12.5e", MSX.MassBalance.reacted[m]);
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "Final Mass:        %12.5e", MSX.MassBalance.final[m]);
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "Mass Ratio:         %-.5f", MSX.MassBalance.ratio[m]);
+        writeLine(s1);
+        snprintf(s1, MAXMSG, "================================\n");
+        writeLine(s1);
+    }
+}
+
+
+
+
+
+
+
+

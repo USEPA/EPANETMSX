@@ -38,3 +38,16 @@ The following bugs are fixed.
 4. MSXsetpattern did not set the current patternvalue index to be the first.
 
 5. Pipe roughness is added as a reserved hydraulic variable. The keyword is Kc. 
+
+MSX 2.00.00
+
+08/26/2022
+
+1. Dispersion modeling is included as an option.
+
+2. OPENMP parallelization for both reactuion and dispersion solver.
+
+3. EPANET 2.2 WQ routing method.
+
+4. Mass balance report.
+ 

@@ -3,16 +3,12 @@
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   Input data processor for the EPANET Multi-Species Extension
 **                 toolkit.
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
-**  LAST UPDATE:   11/01/10
-**  BUG FIX:	   BUG ID 09 (add roughness as a hydraulic variable) Feng Shang 01/29/2008	
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
+**  VERSION:       2.0.00
+**  LAST UPDATE:   08/20/2022
 *******************************************************************************/
-#define _CRT_SECURE_NO_DEPRECATE
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +35,7 @@ extern MSXproject  MSX;                // MSX project data
 //-----------------
 static char *Tok[MAXTOKS];             // String tokens from line of input
 static int  Ntokens;                   // Number of tokens in line of input
-static double **TermArray;             // Incidence array used to check Terms  //1.1.00
+static double **TermArray;             // Incidence array used to check Terms  
 
 enum InpErrorCodes {                   // Error codes (401 - 409)
     INP_ERR_FIRST        = 400,
@@ -52,6 +48,7 @@ enum InpErrorCodes {                   // Error codes (401 - 409)
     ERR_DUP_NAME,
     ERR_DUP_EXPR, 
     ERR_MATH_EXPR,
+    ERR_UNSUPPORTED_OPTION,
     INP_ERR_LAST};
 
 static char  *InpErrorTxt[INP_ERR_LAST-INP_ERR_FIRST] = {
@@ -64,7 +61,8 @@ static char  *InpErrorTxt[INP_ERR_LAST-INP_ERR_FIRST] = {
     "Error 406 (illegal use of a reserved name)",
     "Error 407 (name already used by another object)",
     "Error 408 (species already assigned an expression)", 
-    "Error 409 (illegal math expression)"};
+    "Error 409 (illegal math expression)",
+    "Error 410 (option no longer supported)"};
 
 //  Imported functions
 //--------------------
@@ -101,12 +99,13 @@ static int    parseParameter(void);
 static int    parseSource(void);
 static int    parsePattern(void);
 static int    parseReport(void);
+static int    parseDiffu(void);
 static int    getVariableCode(char *id);
 static int    getTokens(char *s);
 static void   writeInpErrMsg(int errcode, char *sect, char *line, int lineCount);
 
-static int    checkCyclicTerms(void);                                          //1.1.00
-static int    traceTermPath(int i, int istar, int n);                          //1.1.00
+static int    checkCyclicTerms(void);                                          
+static int    traceTermPath(int i, int istar, int n);                          
 
 //=============================================================================
 
@@ -158,6 +157,7 @@ int MSXinp_countMsxObjects()
         if ( sect == s_COEFF )   errcode = addCoeff(line);
         if ( sect == s_TERM )    errcode = addTerm(tok);
         if ( sect == s_PATTERN ) errcode = addPattern(tok);
+
 
     // --- report any error found
 
@@ -214,17 +214,20 @@ int MSXinp_readNetData()
 */
 {
     int   errcode = 0;
-	int   i, k, n, t = 0;
+    int   i, k, n, t = 0;
     int   n1 = 0, n2 = 0;
+    long  qstep;
     float diam = 0.0, len = 0.0, v0 = 0.0, xmix = 0.0, vmix = 0.0;
 
-	float roughness = 0.0;   /*Feng Shang, Bug ID 8,  01/29/2008*/
+    float roughness = 0.0;   
+
 // --- get flow units & time parameters
 
     CALL(errcode, ENgetflowunits(&MSX.Flowflag));
     if ( MSX.Flowflag >= EN_LPS ) MSX.Unitsflag = SI;
     else                          MSX.Unitsflag = US;
-    CALL(errcode, ENgettimeparam(EN_QUALSTEP, &MSX.Qstep));
+    CALL(errcode, ENgettimeparam(EN_QUALSTEP, &qstep));
+    MSX.Qstep = qstep * 1000;
     CALL(errcode, ENgettimeparam(EN_REPORTSTEP, &MSX.Rstep));
     CALL(errcode, ENgettimeparam(EN_REPORTSTART, &MSX.Rstart));
     CALL(errcode, ENgettimeparam(EN_PATTERNSTEP, &MSX.Pstep));
@@ -263,14 +266,14 @@ int MSXinp_readNetData()
         CALL(errcode, ENgetlinknodes(i, &n1, &n2));
         CALL(errcode, ENgetlinkvalue(i, EN_DIAMETER, &diam));
         CALL(errcode, ENgetlinkvalue(i, EN_LENGTH, &len));
-        CALL(errcode, ENgetlinkvalue(i, EN_ROUGHNESS, &roughness));  /*Feng Shang, Bug ID 8,  01/29/2008*/
+        CALL(errcode, ENgetlinkvalue(i, EN_ROUGHNESS, &roughness));  
         if ( !errcode )
         {
             MSX.Link[i].n1 = n1;
             MSX.Link[i].n2 = n2;
             MSX.Link[i].diam = diam;
             MSX.Link[i].len = len;
-            MSX.Link[i].roughness = roughness;  /*Feng Shang, Bug ID 8,  01/29/2008*/
+            MSX.Link[i].roughness = roughness;  
         }
     }
     return errcode;
@@ -297,10 +300,10 @@ int  MSXinp_readMsxData()
     int   inperr = 0;                  // input error code
     long  lineCount = 0;               // line count
 
-// --- create the TermArray for checking circular references in Terms          //1.1.00
+// --- create the TermArray for checking circular references in Terms         
 
-	TermArray = createMatrix(MSX.Nobjects[TERM]+1, MSX.Nobjects[TERM]+1);      //1.1.00
-	if ( TermArray == NULL ) return ERR_MEMORY;                                //1.1.00
+	TermArray = createMatrix(MSX.Nobjects[TERM]+1, MSX.Nobjects[TERM]+1);      
+	if ( TermArray == NULL ) return ERR_MEMORY;                                
 
 // --- read each line from MSX input file
 
@@ -346,9 +349,9 @@ int  MSXinp_readMsxData()
 
 // --- check for errors
 
-    if ( checkCyclicTerms() ) errsum++;                                        //1.1.00
-    freeMatrix(TermArray);                                                     //1.1.00
-    if (errsum > 0) return ERR_MSX_INPUT;                                      //1.1.00
+    if ( checkCyclicTerms() ) errsum++;                                        
+    freeMatrix(TermArray);                                                    
+    if (errsum > 0) return ERR_MSX_INPUT;                                     
     return 0;
 }
 
@@ -566,9 +569,9 @@ int checkID(char *id)
     
 // --- check that id name not used before
 
-    if ( MSXproj_findObject(SPECIES, id)   > 0 ||
-         MSXproj_findObject(TERM, id)      > 0 ||
-         MSXproj_findObject(PARAMETER, id) > 0 ||
+    if ( MSXproj_findObject(SPECIES, id) > 0 ||
+         MSXproj_findObject(TERM, id)   > 0 ||
+         MSXproj_findObject(PARAMETER, id)  > 0 ||
          MSXproj_findObject(CONSTANT, id)  > 0
        ) return ERR_DUP_NAME;
     return 0;
@@ -627,6 +630,9 @@ int parseLine(int sect, char *line)
 
       case s_REPORT:
         return parseReport();
+
+      case s_Diffu:
+          return parseDiffu();
     }
     return 0;
 }
@@ -646,6 +652,7 @@ int parseOption()
 */
 {
     int k;
+    double v;
 
 // --- determine which option is being read
 
@@ -679,12 +686,17 @@ int parseOption()
           k = MSXutils_findmatch(Tok[1], CouplingWords);
           if ( k < 0 ) return ERR_KEYWORD;
           MSX.Coupling = k;
-		  break;
+          break;
 
       case TIMESTEP_OPTION:
-          k = atoi(Tok[1]);
-          if ( k <= 0 ) return ERR_NUMBER;
-          MSX.Qstep = k;
+
+          // Read time step as a floating point value in seconds
+          if ( !MSXutils_getDouble(Tok[1], &v) ) return ERR_NUMBER;
+          if ( v < 0.001 ) return ERR_NUMBER;
+
+          // Convert time step to integer milliseconds
+          v = round(v * 1000.);
+          MSX.Qstep = (int64_t)v;
           break;
 
       case RTOL_OPTION:
@@ -695,11 +707,22 @@ int parseOption()
           if ( !MSXutils_getDouble(Tok[1], &MSX.DefAtol) ) return ERR_NUMBER;
           break;
 
-      case COMPILER_OPTION:                                                    //1.1.00
+      case COMPILER_OPTION:                                                    
           k = MSXutils_findmatch(Tok[1], CompilerWords);
           if ( k < 0 ) return ERR_KEYWORD;
     	  MSX.Compiler = k;
-	  break;
+          break;
+
+      case PECLETNUMER_OPTION:
+          v = atof(Tok[1]);
+          if (v <= 0.0)return ERR_NUMBER;
+          MSX.Dispersion.PecletLimit = MAX(v, 1.0);
+          break;
+
+      case MAXSEGMENT_OPTION:
+          k = atoi(Tok[1]);
+          if (k <= 0) return ERR_NUMBER;
+          MSX.MaxSegments = MAX(k, 50);  //at least 50 segments
 
     }
     return 0;
@@ -836,7 +859,7 @@ int parseTerm()
 */
 {
     int i, j;
-    int k;                                                                     //1.1.00
+	int k;                                                                   
     char s[MAXLINE+1] = "";
     MathExpr *expr;
 
@@ -844,16 +867,16 @@ int parseTerm()
 
     if ( Ntokens < 2 ) return 0;
     i = MSXproj_findObject(TERM, Tok[0]);
-    MSX.Term[i].id = MSXproj_findID(TERM, Tok[0]);                             //1.1.00
+    MSX.Term[i].id = MSXproj_findID(TERM, Tok[0]);                             
 
 // --- reconstruct the expression string from its tokens
 
     for (j=1; j<Ntokens; j++)
-    {                                                                          //1.1.00
-        strcat(s, Tok[j]);                     
-        k = MSXproj_findObject(TERM, Tok[j]);                                  //1.1.00
-        if ( k > 0 ) TermArray[i][k] = 1.0;                                    //1.1.00
-    }                                                                          //1.1.00
+	{                                                                          
+		strcat(s, Tok[j]);                     
+		k = MSXproj_findObject(TERM, Tok[j]);                                  
+		if ( k > 0 ) TermArray[i][k] = 1.0;                                  
+	}                                                                          
     
 // --- convert expression into a postfix stack of op codes
 
@@ -975,7 +998,7 @@ int parseQuality()
 
     if ( i == 1)
     {
-		MSX.C0[m] = x;
+        MSX.C0[m] = x;
         if ( MSX.Species[m].type == BULK )
         {
             for (j=1; j<=MSX.Nobjects[NODE]; j++) MSX.Node[j].c0[m] = x;
@@ -1153,7 +1176,7 @@ int parsePattern()
     if ( Ntokens < 2 ) return ERR_ITEMS;
     i = MSXproj_findObject(PATTERN, Tok[0]);
     if ( i <= 0 ) return ERR_NAME;
-	MSX.Pattern[i].id = MSXproj_findID(PATTERN, Tok[0]);
+    MSX.Pattern[i].id = MSXproj_findID(PATTERN, Tok[0]);
 
 // --- begin reading pattern multipliers
 
@@ -1262,6 +1285,49 @@ int parseReport()
         if ( !MSXutils_getInt(Tok[1], &MSX.PageSize) ) return ERR_NUMBER;
         break;
     }
+    return 0;
+}
+
+int parseDiffu()
+/*
+**  Purpose:
+**    parses an input line containing molecular diffusivity data.
+**
+**  Input:
+**    none
+**
+**  Returns:
+**    an error code (0 if no error)
+*/
+{
+    int m;
+    double  x;
+
+    // --- get source type
+    if (Ntokens < 2) return ERR_ITEMS;
+
+    //  --- get species index
+    m = MSXproj_findObject(SPECIES, Tok[0]);
+    if (m <= 0) return ERR_NAME;
+
+    // --- check that species is a BULK species
+    if (MSX.Species[m].type != BULK) return 0;
+
+    // --- get base strength
+    if (!MSXutils_getDouble(Tok[1], &x)) return ERR_NUMBER;
+    if (x < 0) return ERR_NUMBER;
+
+    if (Ntokens > 2 && MSXutils_match(Tok[2], "FIXED"))
+    {
+        x = x * MSX.Dispersion.DIFFUS;
+        MSX.Dispersion.ld[m] = x;     
+    }
+    else
+    {
+        x = x * MSX.Dispersion.DIFFUS;
+        MSX.Dispersion.md[m] = x;
+    }
+    MSX.DispersionFlag = 1;
     return 0;
 }
 
@@ -1378,7 +1444,7 @@ void writeInpErrMsg(int errcode, char *sect, char *line, int lineCount)
 
 //=============================================================================
 
-int checkCyclicTerms()                                                         //1.1.00
+int checkCyclicTerms()                                                         
 /*
 **  Purpose:
 **    checks for cyclic references in Term expressions (e.g., T1 = T2 + T3
@@ -1399,9 +1465,9 @@ int checkCyclicTerms()                                                         /
     {
         for (j=1; j<=n; j++) TermArray[0][j] = 0.0;
         if ( traceTermPath(i, i, n) )
-        {
+	{
             sprintf(msg, "Error 410 - term %s contains a cyclic reference.",
-                         MSX.Term[i].id);
+                MSX.Term[i].id);
             ENwriteline(msg);
             return 1;
         }
@@ -1411,7 +1477,7 @@ int checkCyclicTerms()                                                         /
 
 //=============================================================================
 
-int traceTermPath(int i, int istar, int n)                                     //1.1.00
+int traceTermPath(int i, int istar, int n)                                    
 /*
 **  Purpose:
 **    checks if Term[istar] is in the path of terms that appear when evaluating

@@ -2,12 +2,10 @@
 **  MODULE:        MATHEXPR.H
 **  PROJECT:       EPANET-MSX
 **  DESCRIPTION:   header file for the math expression parser in mathexpr.c.
-**  COPYRIGHT:     Copyright (C) 2007 Feng Shang, Lewis Rossman, and James Uber.
-**                 All Rights Reserved. See license information in LICENSE.TXT.
-**  AUTHORS:       L. Rossman, US EPA - NRMRL
-**                 F. Shang, University of Cincinnati
-**                 J. Uber, University of Cincinnati
-**  VERSION:       1.1.00
+**  AUTHORS:       see AUTHORS
+**  Copyright:     see AUTHORS
+**  License:       see LICENSE
+**  VERSION:       2.0.00
 **  LAST UPDATE:   2/8/11
 ******************************************************************************/
 
@@ -31,6 +29,6 @@ double mathexpr_eval(MathExpr* expr, double (*getVal) (int));
 //  Deletes a tokenized math expression
 void  mathexpr_delete(MathExpr* expr);
 
-// Returns reconstructed string version of a tokenized expression              //1.1.00
+// Returns reconstructed string version of a tokenized expression              
 char * mathexpr_getStr(MathExpr* expr, char* exprStr,
                        char * (*getVariableStr) (int, char *));

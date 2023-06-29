@@ -1,13 +1,13 @@
-  Page 1                                    Tue Aug 14 09:18:21 2007
+  Page 1                                    Tue Aug 23 20:33:30 2022
 
   ******************************************************************
   *                           E P A N E T                          *
   *                   Hydraulic and Water Quality                  *
   *                   Analysis for Pipe Networks                   *
-  *                         Version 2.00.11                        *
+  *                         Version 2.2                            *
   ******************************************************************
   
-  EPANET-MSX Example Network 
+  EPANET-MSX Example Network
    
       Input Data File ................... example.inp
       Number of Junctions................ 4
@@ -17,9 +17,13 @@
       Number of Pumps ................... 0
       Number of Valves .................. 0
       Headloss Formula .................. Hazen-Williams
+      Nodal Demand Model ................ DDA
       Hydraulic Timestep ................ 1.00 hrs
       Hydraulic Accuracy ................ 0.001000
-      Maximum Trials .................... 40
+      Status Check Frequency ............ 2
+      Maximum Trials Checked ............ 10
+      Damping Limit Threshold ........... 0.000000
+      Maximum Trials .................... 200
       Quality Analysis .................. None
       Specific Gravity .................. 1.00
       Relative Kinematic Viscosity ...... 1.00
@@ -30,18 +34,18 @@
          No Nodes
          No Links
    
-  Analysis begun Tue Aug 14 09:18:21 2007
+  Analysis begun Tue Aug 23 20:33:30 2022
 
   Processing MSX input file example.msx
   
   
-Page 1                                               EPANET-MSX 1.0
+Page 1                                               EPANET-MSX 2.0.0
   
   ******************************************************************
   *                      E P A N E T  -  M S X                     *
   *                   Multi-Species Water Quality                  *
   *                   Analysis for Pipe  Networks                  *
-  *                           Version 1.0                          *
+  *                           Version 2.0.0                        *
   ******************************************************************
   
   Arsenic Oxidation/Adsorption Example
@@ -114,7 +118,7 @@
   Time            AS5       AStot        AS5s       NH2CL
   hr:min         UG/L        UG/L       UG/M2        MG/L
   -------  ----------  ----------  ----------  ----------
-     0:00        0.00        0.00        0.00        0.00
+     0:00        0.00        0.00       -0.00        0.00
      2:00        0.00        0.00        0.00        0.00
      4:00        0.00        0.00        0.00        0.00
      6:00        0.00        0.00        0.00        0.00
@@ -140,4 +144,40 @@
     46:00        9.64        9.64       48.98        0.57
     48:00        9.75        9.75       48.99        0.57
   
-  Analysis ended Tue Aug 14 09:18:22 2007
+
+  Water Quality Mass Balance: AS3 (UG)
+  ================================
+  Initial Mass:       0.00000e+00
+  Mass Inflow:        7.34409e+06
+  Mass Outflow:       5.15609e-11
+  Mass Reacted:      -7.32740e+06
+  Final Mass:         1.66911e+04
+  Mass Ratio:         1.00000
+  ================================
+
+  
+
+  Water Quality Mass Balance: AS5 (UG)
+  ================================
+  Initial Mass:       0.00000e+00
+  Mass Inflow:        0.00000e+00
+  Mass Outflow:       5.79736e+06
+  Mass Reacted:       7.13763e+06
+  Final Mass:         1.34027e+06
+  Mass Ratio:         1.00000
+  ================================
+
+  
+
+  Water Quality Mass Balance: NH2CL (MG)
+  ================================
+  Initial Mass:       0.00000e+00
+  Mass Inflow:        1.83602e+06
+  Mass Outflow:       8.51117e+05
+  Mass Reacted:      -8.00156e+05
+  Final Mass:         1.84749e+05
+  Mass Ratio:         1.00000
+  ================================
+
+  
+  Analysis ended Tue Aug 23 20:33:31 2022
