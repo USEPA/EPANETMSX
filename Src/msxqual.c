@@ -1209,7 +1209,7 @@ double  getSourceQual(Psource source)
 // --- apply time pattern if assigned
     i = source->pat;
     if (i == 0) return(c);
-    k = (int)((MSX.Qtime + MSX.Pstart) / MSX.Pstep) % MSX.Pattern[i].length;
+    k = (int)((MSX.Qtime + MSX.Pstart*1000) / (MSX.Pstep*1000)) % MSX.Pattern[i].length;
     if (k != MSX.Pattern[i].interval)
     {
         if ( k < MSX.Pattern[i].interval )
