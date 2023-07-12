@@ -1,6 +1,8 @@
 \build
 \test
 *.bak
+doc/epanetmsx.doc
+doc/epanetmsx.pdf
 doc/EPANETMSXupdate.txt
 doc/MSX Compiler Notes.doc
 doc/Readme.txt
