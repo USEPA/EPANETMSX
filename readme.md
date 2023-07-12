@@ -15,4 +15,4 @@ cmake --build . --config Release
 Note: under Windows, the third command should be cmake .. -A Win32 for a 32-bit build or cmake .. -A x64 for a 64-bit build 
 when Microsoft Visual Studio is the default compiler. 64-bit EPANETMSX application need to work with 64-bit EPANET2 engine. 
 
-EPANET-MSX manual can be found here: [MSX manual](https://github.com/USEPA/EPANETMSX/blob/master/Doc/epanetmsx_1.1_manual.pdf)
+EPANET-MSX manual can be found here: [MSX manual](https://github.com/USEPA/EPANETMSX/blob/master/Doc/EPANETMSX.pdf)
