@@ -1,6 +1,6 @@
 # EPANET 2.0
 
-The EPANET-MSX 2.0 program is a free software and can be used to model water quality problems involving multiple components. 
+The EPANET-MSX 2.0 is a free software program and can be used to model water quality problems involving multiple components. 
 EPANET-MSX will only run correctly with release 2.2 or higher of the EPANET2 engine. 
 
 CMake (https://cmake.org/) can be used to build EPANETMSX applications. The project's CMake file (CMakeLists.txt) is located in its 
@@ -8,8 +8,11 @@ root directory and supports builds for Linux, Mac OS and Windows. To build the E
 using CMake, first open a console window and navigate to the project's root directory. Then enter the following commands:
 
 mkdir build
+
 cd build
+
 cmake ..
+
 cmake --build . --config Release
 
 Note: under Windows, the third command should be cmake .. -A Win32 for a 32-bit build or cmake .. -A x64 for a 64-bit build 
