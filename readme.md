@@ -7,12 +7,9 @@ CMake (https://cmake.org/) can be used to build EPANETMSX applications. The proj
 root directory and supports builds for Linux, Mac OS and Windows. To build the EPANETMSX library and its command line executable 
 using CMake, first open a console window and navigate to the project's root directory. Then enter the following commands:
 
-mkdir build
-
-cd build
-
-cmake ..
-
+mkdir build\
+cd build\
+cmake ..\
 cmake --build . --config Release
 
 Note: under Windows, the third command should be cmake .. -A Win32 for a 32-bit build or cmake .. -A x64 for a 64-bit build 
