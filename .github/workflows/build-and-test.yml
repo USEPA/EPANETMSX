@@ -3,7 +3,7 @@
 name: Build and Test MSX
 on:
   push:
-    branches: [ master, triplet ]
+    branches: [ master, triplet_build ]
   pull_request:
     branches: [ master ]
 
