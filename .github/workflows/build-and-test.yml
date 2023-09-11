@@ -40,4 +40,11 @@ jobs:
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: |
-        cmake -B .\build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cpp_compiler }}.
+        cmake -B .\build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake_generator }}.
+
+    - name: Upload artifacts
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-test-artifacts
+        path: build/*.*
