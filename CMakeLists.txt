@@ -1,51 +1,64 @@
+#
 # CMakeLists.txt - CMake configuration file for EPANETMSX 2.0
+#
+# Created: Nov 13, 2023
+# Modified: Nov 13, 2023
+#
+# Author: Michael E. Tryby
+#         US EPA ORD/CESER
+#
+
 
 cmake_minimum_required(VERSION 3.9)
 
-project(EPANETMSX LANGUAGES C)
+if("${CMAKE_BINARY_DIR}" STREQUAL "${CMAKE_SOURCE_DIR}")
+    message(FATAL_ERROR "In-source builds are disabled.")
+endif()
+
+project(
+  "EPANETMSX"
+  VERSION 2.0.0
+  DESCRIPTION "Multi-species extension for EPANET"
+  LANGUAGES C CXX
+)
 
 # Append local dir to module search path
-#list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-# Add building the command line executable from the run directory
-add_subdirectory(run)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+# Sets default install prefix when cmakecache is initialized for first time
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install CACHE PATH "..." FORCE)
+endif()
+
 
 # Sets the output directory for executables and libraries.
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(TOOL_DIST "bin")
+set(INCLUDE_DIST "include")
+set(LIBRARY_DIST "lib")
+set(CONFIG_DIST  "cmake")
 
 # Sets the position independent code property for all targets
 SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-IF (APPLE)
-  set(INSTALL_NAME_DIR @executable_path/../lib)
-  set(CMAKE_MACOSX_RPATH 1)
-ENDIF (APPLE)
 
-IF (MSVC)
-  set(CMAKE_C_FLAGS_RELEASE "/GL")
-  add_definitions(-D_CRT_SECURE_NO_DEPRECATE -MT)
-ENDIF (MSVC)
+# option(BUILD_TESTS "Build component tests (requires Boost)" OFF)
+option(BUILD_DEF   "Builds library with def file interface" OFF)
 
-# configure file groups
-file(GLOB MSX_SOURCES RELATIVE ${PROJECT_SOURCE_DIR} Src/*.c Src/*.h Include/epanet2.h Include/epanetmsx.h)
-list(REMOVE_ITEM MSX_SOURCES  Src/msxmain.c)
+# Added option to statically link libraries to address GitHub
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 
-# the shared library
-find_package(OpenMP REQUIRED)
-IF(MSVC AND "${CMAKE_VS_PLATFORM_NAME}" MATCHES "(Win32)")
-  message("   ************************************")
-  message("   Configuring with msx.def mapping")
-  message("   ************************************")
-  find_library(EPANET_LIB epanet2 NAMES epanet2 PATHS ${PROJECT_SOURCE_DIR}/include/x86 NO_DEFAULT_PATH)
-  add_library(epanetmsx SHARED ${MSX_SOURCES} ${PROJECT_SOURCE_DIR}/include/epanetmsx.def)
-  set_source_files_properties(${PROJECT_SOURCE_DIR}/include/msx.def PROPERTIES_HEADER_FILE_ONLY TRUE)
-  target_link_libraries(epanetmsx ${EPANET_LIB} OpenMP::OpenMP_C)
-ELSE(TRUE)
-  find_library(EPANET_LIB epanet2 NAMES epanet2 PATHS ${PROJECT_SOURCE_DIR}/include/x64 NO_DEFAULT_PATH)
-  add_library(epanetmsx SHARED ${MSX_SOURCES})
-  target_link_libraries(epanetmsx ${EPANET_LIB} OpenMP::OpenMP_C)
-ENDIF(MSVC AND "${CMAKE_VS_PLATFORM_NAME}" MATCHES "(Win32)")
+add_subdirectory(EPANET2.2/SRC_engines)
 
-target_include_directories(epanetmsx PUBLIC ${PROJECT_SOURCE_DIR}/include)
+add_subdirectory(src/solver)
 
+add_subdirectory(src/run)
+
+set(CMAKE_INSTALL_OPENMP_LIBRARIES TRUE)
+include(InstallRequiredSystemLibraries)
+
+# Configure CPack driven installer package
+set(CPACK_GENERATOR "ZIP;TGZ")
+set(CPACK_PACKAGE_VENDOR "US_EPA")
+set(CPACK_ARCHIVE_FILE_NAME "epanet-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+
+include(CPack)
