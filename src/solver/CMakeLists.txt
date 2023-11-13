@@ -10,7 +10,7 @@
 find_package(OpenMP)
 
 
-set(EPANET_PUBLIC_HEADERS
+set(EPANETMSX_PUBLIC_HEADERS
     ${PROJECT_SOURCE_DIR}/include/epanetmsx.h
 )
 
@@ -68,7 +68,7 @@ if(UNIX)
         PRIVATE
             m
     )
-endif()
+endif(UNIX)
 
 target_include_directories(epanetmsx
     PUBLIC
@@ -76,26 +76,6 @@ target_include_directories(epanetmsx
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${INCLUDE_DIST}>
 )
-
-# include(GenerateExportHeader)
-# generate_export_header(epanet2
-#     STATIC_DEFINE SHARED_EXPORTS_BUILT_AS_STATIC
-# )
-
-# if(APPLE) 
-#     set(LIB_ROOT "@loader_path")
-# else()
-#     set(LIB_ROOT "$ORIGIN")
-# endif()
-
-# set_target_properties(epanet2
-#     PROPERTIES
-#         MACOSX_RPATH TRUE
-#         SKIP_BUILD_RPATH FALSE
-#         BUILD_WITH_INSTALL_RPATH FALSE
-#         INSTALL_RPATH "${LIB_ROOT};${PACKAGE_RPATH};"
-#         INSTALL_RPATH_USE_LINK_PATH TRUE
-# )
 
 
 install(TARGETS epanetmsx EXPORT epanetmsxTargets
