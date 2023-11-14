@@ -63,18 +63,23 @@ target_link_options(epanetmsx
         ">"
 )
 
-if(UNIX)
-    target_link_libraries(epanetmsx
-        PRIVATE
-            m
-    )
-endif(UNIX)
+
+target_link_libraries(epanetmsx
+    PUBLIC
+        $<$<NOT:$<BOOL:$<C_COMPILER_ID:MSVC>>>:m>
+        $<$<BOOL:${OpenMP_C_FOUND}>:OpenMP::OpenMP_C>
+        $<$<BOOL:${OpenMP_AVAILABLE}>:omp>
+)
+
 
 target_include_directories(epanetmsx
     PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/EPANET2.2/SRC_engines/include>
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${INCLUDE_DIST}>
+
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
 
