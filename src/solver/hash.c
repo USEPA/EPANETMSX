@@ -17,6 +17,10 @@
 #include <string.h>
 #include "hash.h"
 
+#if defined(macintosh) || defined(Macintosh) || defined(__APPLE__) && defined(__MACH__)
+#include <stdlib.h>
+#endif
+
 /* Use Fletcher's checksum to compute 2-byte hash of string */
 unsigned int hash(char *str)
 {
