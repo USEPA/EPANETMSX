@@ -9,6 +9,7 @@
 #include <string.h>
 #include <math.h>
 #include <omp.h>
+
 #include "msxtypes.h"
 #include "dispersion.h"
 #include "smatrix.h"

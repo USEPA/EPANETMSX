@@ -37,7 +37,6 @@ jobs:
     - name: Install OpenMP Binaries for MacOS
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
-        echo $PWD
         brew update
         brew reinstall --build-from-source --formula ./shell/apple/libomp.rb
 

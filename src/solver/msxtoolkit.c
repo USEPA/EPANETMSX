@@ -22,10 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <float.h>
-
-#if defined(macintosh) || defined(Macintosh) || defined(__APPLE__) && defined(__MACH__)
 #include <stdlib.h>
-#endif
 
 #include "msxtypes.h"
 #include "msxutils.h"                                                          
