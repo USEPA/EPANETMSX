@@ -76,6 +76,7 @@ target_include_directories(epanetmsx
     PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/EPANET2.2/SRC_engines/include>
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        ${PROJECT_SOURCE_DIR}/include
         $<INSTALL_INTERFACE:${INCLUDE_DIST}>
 
     PRIVATE
