@@ -23,7 +23,11 @@ add_executable(runepanetmsx
 
 target_include_directories(runepanetmsx
     PUBLIC
-        ${PROJECT_SOURCE_DIR}/include
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${INCLUDE_DIST}>
+
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
 target_link_libraries(runepanetmsx
