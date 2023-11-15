@@ -10,6 +10,10 @@
 **  LAST UPDATE:   08/30/2022
 ***********************************************************************/
 
+#ifndef MSXTYPES_H
+#define MSXTYPES_H
+
+
 #include "mathexpr.h"
 #include "mempool.h"
 #include <stdint.h>
@@ -544,4 +548,4 @@ typedef struct                         // MSX PROJECT VARIABLES
 
 } MSXproject;
 
-
+#endif

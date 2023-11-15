@@ -1,3 +1,7 @@
+
+#ifndef SMATRIX_H
+#define SMATRIX_H
+
 /* ----------- SMATRIX.C ---------------*/
 int     createsparse(void);               /* Creates sparse matrix      */
 int     allocsparse(void);                /* Allocates matrix memory    */
@@ -19,3 +23,5 @@ void    transpose(int, int*, int*,        /* Transposes sparse matrix   */
     int*, int*, int*, int*, int*);
 int     linsolve(int, double*, double*, /* Solution of linear eqns.   */
     double*);               /* via Cholesky factorization */
+
+#endif
