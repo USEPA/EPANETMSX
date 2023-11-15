@@ -58,7 +58,7 @@ jobs:
       # required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: |
-        ./build/_CPack_Packages/ZIP/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.alias }}/bin/runepanetmsx ./examples/example.inp ./examples/example.msx ./examples/example.rpt ./examples/example.out
+        ./build/_CPack_Packages/${{ matrix.alias }}/ZIP/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.alias }}/bin/runepanetmsx ./examples/example.inp ./examples/example.msx ./examples/example.rpt ./examples/example.out
 
     - name: Upload artifacts
       if: ${{ always() }}
