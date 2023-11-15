@@ -13,6 +13,7 @@
 #include "msxtypes.h"
 #include "dispersion.h"
 #include "smatrix.h"
+
 #define ERRCODE(x) (errcode = ((errcode>100) ? (errcode) : (x)))
 //  External variables
 //--------------------
