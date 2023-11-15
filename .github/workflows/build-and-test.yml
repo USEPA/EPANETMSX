@@ -10,6 +10,9 @@ on:
 jobs:
   build:
     name: Build, Unit Testing, and Regression Testing
+    environment: testing
+    env:
+      BuildVersion: 2.0.0
     strategy:
       fail-fast: false
       matrix:
@@ -18,23 +21,20 @@ jobs:
           - os: windows-latest
             cmake_generator: -G "Visual Studio 17 2022" -A "x64"
             continue-on-error: false
-            assign_permission:
             alias: win64
+            assign_permission:
           - os: ubuntu-latest
             cmake_generator: -G "Unix Makefiles"
             continue-on-error: false
-            assign_permission: chmod u+x ./build/_CPack_Packages/${{ matrix.alias }}/TGZ/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.alias }}/bin/runepanetmsx
             alias: Linux
+            assign_permission: chmod u+x ./build/_CPack_Packages/${{ matrix.alias }}/TGZ/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.alias }}/bin/runepanetmsx
           - os: macos-latest
             cmake_generator: -G "Xcode"
             continue-on-error: false
-            assign_permission: chmod u+x ./build/_CPack_Packages/${{ matrix.alias }}/TGZ/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.alias }}/bin/runepanetmsx
             alias: Darwin
+            assign_permission: chmod u+x ./build/_CPack_Packages/${{ matrix.alias }}/TGZ/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.alias }}/bin/runepanetmsx
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.continue-on-error }}
-    environment: testing
-    env:
-      BuildVersion: 2.0.0
 
 
     steps:
