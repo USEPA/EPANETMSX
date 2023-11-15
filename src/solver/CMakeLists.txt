@@ -11,7 +11,7 @@ find_package(OpenMP)
 
 
 set(EPANETMSX_PUBLIC_HEADERS
-    ${PROJECT_SOURCE_DIR}/include/epanetmsx.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/epanetmsx.h
 )
 
 file(GLOB
@@ -63,6 +63,19 @@ target_link_options(epanetmsx
         ">"
 )
 
+include(GenerateExportHeader)
+generate_export_header(epanetmsx 
+    BASE_NAME epanetmsx
+    EXPORT_MACRO_NAME MSXDLLEXPORT
+    EXPORT_FILE_NAME epanetmsx_export.h
+    STATIC_DEFINE SHARED_EXPORTS_BUILT_AS_STATIC
+)
+
+file(COPY ${CMAKE_CURRENT_BINARY_DIR}/epanetmsx_export.h
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include
+)
+
+
 
 target_link_libraries(epanetmsx
     PUBLIC
@@ -75,7 +88,7 @@ target_link_libraries(epanetmsx
 target_include_directories(epanetmsx
     PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/EPANET2.2/SRC_engines/include>
-        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${INCLUDE_DIST}>
 
     PRIVATE
