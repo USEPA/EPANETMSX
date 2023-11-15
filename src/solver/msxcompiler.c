@@ -15,6 +15,7 @@
 
 #include "msxtypes.h"
 #include "msxutils.h"
+#include "msxfuncs.h"
 
 // --- define WINDOWS
 
