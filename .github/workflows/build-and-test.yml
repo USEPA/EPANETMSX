@@ -37,7 +37,6 @@ jobs:
     - name: Build OpenMP Binaries for MacOS via Homebrew
       if: ${{ matrix.os == 'macos-latest' }}
       run: |
-        brew update
         brew reinstall --build-from-source --formula ./shell/apple/libomp.rb
 
     - name: Build

@@ -1,4 +1,4 @@
 [submodule "EPANET2.2"]
 	path = EPANET2.2
 	url = https://github.com/USEPA/EPANET2.2.git
-	branch = triplet_build
+	branch = master
