@@ -145,7 +145,7 @@ int  MSXproj_open(char *fname)
         ENgetoption(13, &relvis);
         MSX.Dispersion.viscosity = relvis * 1.1E-5;
 
-        createsparse();   //symmetric matrix
+        msx_createsparse();   //symmetric matrix
     }
 
     // Build nodal adjacency lists 

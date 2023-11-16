@@ -382,7 +382,7 @@ void solve_nodequal(int m, double tstep)
 		}
 	}
 
-	int errcode = linsolve(njuncs, MSX.Dispersion.Aii, MSX.Dispersion.Aij, MSX.Dispersion.F);
+	int errcode = msx_linsolve(njuncs, MSX.Dispersion.Aii, MSX.Dispersion.Aij, MSX.Dispersion.F);
 
 	for (int i = 1; i <= njuncs; i++)
 	{

@@ -12,9 +12,9 @@ AUTHOR:     L. Rossman
 This module contains the sparse matrix routines used to solve    
 a network's hydraulic equations. The entry points into this      
 module are:                                                      
-   createsparse() -- called from openhyd() in HYDRAUL.C           
-   freesparse()   -- called from closehyd() in HYDRAUL.C           
-   linsolve()     -- called from netsolve() in HYDRAUL.C          
+   msx_createsparse() -- called from openhyd() in HYDRAUL.C           
+   msx_freesparse()   -- called from closehyd() in HYDRAUL.C           
+   msx_linsolve()     -- called from netsolve() in HYDRAUL.C          
                                                                    
 Createsparse() does the following:                               
    1. for each node, builds an adjacency list that identifies    
@@ -52,7 +52,7 @@ extern MSXproject  MSX;                // MSX project data
 
 
 
-int  createsparse()
+int  msx_createsparse()
 /*
 **--------------------------------------------------------------
 ** Input:   none                                                
@@ -88,7 +88,7 @@ int  createsparse()
    ERRCODE(storesparse(njuncs));
 
    /* Free memory used for adjacency lists and sort */
-   /* row indexes in NZSUB to optimize linsolve().  */
+   /* row indexes in NZSUB to optimize msx_linsolve().  */
    if (!errcode) freelists();
    ERRCODE(ordersparse(njuncs));
 
@@ -124,7 +124,7 @@ int  createsparse()
    /* Free allocated memory */
    free(MSX.Dispersion.Degree);
    return(errcode);
-}                        /* End of createsparse */
+}                        /* End of msx_createsparse */
 
 
 int  allocsparse()
@@ -158,7 +158,7 @@ int  allocsparse()
 }
 
 
-void  freesparse()
+void  msx_freesparse()
 /*
 **----------------------------------------------------------------
 ** Input:   None                                                
@@ -190,7 +190,7 @@ void  freesparse()
 
 
 
-}                        /* End of freesparse */
+}                        /* End of msx_freesparse */
 
 
 int  buildlists(int paraflag)
@@ -671,7 +671,7 @@ void  transpose(int n, int *il, int *jl, int *xl, int *ilt, int *jlt,
 }                        /* End of transpose */
 
 
-int  linsolve(int n, double *Aii, double *Aij, double *B)
+int  msx_linsolve(int n, double *Aii, double *Aij, double *B)
 /*
 **--------------------------------------------------------------
 ** Input:   n    = number of equations                          
@@ -809,7 +809,7 @@ int  linsolve(int n, double *Aii, double *Aij, double *B)
    }
 
    return(errcode);
-}                        /* End of linsolve */
+}                        /* End of msx_linsolve */
 
 
 /************************ END OF SMATRIX.C ************************/

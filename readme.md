@@ -16,11 +16,7 @@ using CMake, first open a console window and navigate to the project's root dire
 ```
 cmake -B build .
 cmake --build build --config Release --target package
-
 ```
-
-Note: under Windows, the third command should be cmake .. -A Win32 for a 32-bit build or cmake .. -A x64 for a 64-bit build 
-when Microsoft Visual Studio is the default compiler. 64-bit EPANETMSX application need to work with 64-bit EPANET2 engine. 
 
 # Documentation
 
