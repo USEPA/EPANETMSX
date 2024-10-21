@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest, macos-13, macos-latest]
         include:
           - os: windows-latest
             cmake_generator: -G "Visual Studio 17 2022" -A "x64"
@@ -26,6 +26,10 @@ jobs:
             cmake_generator: -G "Unix Makefiles"
             continue-on-error: false
             alias: Linux
+          - os: macos-13
+            cmake_generator: -G "Xcode"
+            continue-on-error: false
+            alias: Darwin12
           - os: macos-latest
             cmake_generator: -G "Xcode"
             continue-on-error: false
@@ -41,7 +45,7 @@ jobs:
         submodules: true
 
     - name: Build OpenMP Binaries for MacOS via Homebrew
-      if: ${{ matrix.os == 'macos-latest' }}
+      if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macos-13' }}
       run: |
         brew reinstall --build-from-source --formula ./shell/apple/libomp.rb
 
