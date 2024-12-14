@@ -29,11 +29,11 @@ jobs:
           - os: macos-13
             cmake_generator: -G "Xcode"
             continue-on-error: false
-            alias: Darwin12
+            alias: intel-mac
           - os: macos-latest
             cmake_generator: -G "Xcode"
             continue-on-error: false
-            alias: Darwin
+            alias: apple-silicon
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.continue-on-error }}
 
@@ -75,6 +75,13 @@ jobs:
         chmod +x ./build/_CPack_Packages/${{ matrix.alias }}/ZIP/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.alias }}/bin/runepanetmsx
         ./build/_CPack_Packages/${{ matrix.alias }}/ZIP/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.alias }}/bin/runepanetmsx ./Examples/example.inp ./Examples/example.msx ./Examples/example.rpt ./Examples/example.out
       
+    - name: Qualify darwin artifacts with os versions
+      if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
+      run: |
+        cd build
+        for file in *.zip; do mv "$file" "${file%.zip}-${{ matrix.alias }}.zip"; done
+        for file in *.tar.gz; do mv "$file" "${file%.tar.gz}-${{ matrix.alias }}.tar.gz"; done
+        cd ..
 
     - name: Upload artifacts
       if: ${{ always() }}
