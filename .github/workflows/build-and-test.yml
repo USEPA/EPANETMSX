@@ -3,7 +3,7 @@
 name: Build and Test MSX
 on:
   push:
-    branches: [ master ]
+    branches: [ master, triplet_build ]
   pull_request:
     branches: [ master ]
 
@@ -50,7 +50,8 @@ jobs:
     - name: Build OpenMP Binaries for MacOS via Homebrew
       if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macos-13' }}
       run: |
-        brew reinstall --build-from-source --formula ./shell/apple/libomp.rb
+        brew install libomp
+        echo "OpenMP_ROOT=$(brew --prefix libomp)" >> $GITHUB_ENV
 
     - name: Build
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only 
