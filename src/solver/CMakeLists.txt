@@ -7,9 +7,9 @@
 #         US EPA ORD/CESER
 #
 
-list(APPEND CMAKE_LIBRARY_PATH "/opt/homebrew/opt")
-list(APPEND CMAKE_LIBRARY_PATH "/opt/homebrew/opt/libomp")
-list(APPEND CMAKE_LIBRARY_PATH "/opt/homebrew/opt/libomp/lib")
+# list(APPEND CMAKE_LIBRARY_PATH "usr/local/opt")
+# list(APPEND CMAKE_LIBRARY_PATH "usr/local/opt/libomp")
+# list(APPEND CMAKE_LIBRARY_PATH "usr/local/opt/libomp/lib")
 find_package(OpenMP)
 
 
