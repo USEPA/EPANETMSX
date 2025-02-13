@@ -10,7 +10,15 @@
 # list(APPEND CMAKE_LIBRARY_PATH "usr/local/opt")
 # list(APPEND CMAKE_LIBRARY_PATH "usr/local/opt/libomp")
 # list(APPEND CMAKE_LIBRARY_PATH "usr/local/opt/libomp/lib")
-find_package(OpenMP)
+find_package(OpenMP 
+    HINTS 
+        "usr/local/opt" 
+        "usr/local/opt/libomp" 
+        "usr/local/opt/libomp/lib"
+        "opt/homebrew/opt"
+        "opt/homebrew/opt/libomp"
+        "opt/homebrew/opt/libomp/lib"
+)
 
 
 set(EPANETMSX_PUBLIC_HEADERS
