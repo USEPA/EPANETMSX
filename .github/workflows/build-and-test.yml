@@ -43,22 +43,23 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: true
 
-    - name: Build OpenMP Binaries for MacOS via Homebrew
+    - name: Install OpenMP on MacOS
       if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macos-13' }}
       run: |
-        brew reinstall --build-from-source --formula ./shell/apple/libomp.rb
+        brew reinstall --build-from-source libomp
+        brew link --force --overwrite libomp
 
     - name: Build
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only 
       # required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: |
-        cmake -B build ${{ matrix.cmake_generator }} .
-        cmake --build build --config Release --target package
+        cmake -B build-${{ matrix.alias }} ${{ matrix.cmake_generator }} .
+        cmake --build build-${{ matrix.alias }} --config Release --target package
 
     - name: Run Example on Windows
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only 
@@ -66,7 +67,7 @@ jobs:
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       if: ${{ matrix.os == 'windows-latest' }}
       run: |
-        ./build/_CPack_Packages/${{ matrix.alias }}/ZIP/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.alias }}/bin/runepanetmsx ./Examples/example.inp ./Examples/example.msx ./Examples/example.rpt ./Examples/example.out
+        ./build-${{ matrix.alias }}/_CPack_Packages/${{ matrix.alias }}/ZIP/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.alias }}/bin/runepanetmsx ./Examples/example.inp ./Examples/example.msx ./Examples/example.rpt ./Examples/example.out
     
     - name: Run Example on Linux and MacOS
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only 
@@ -74,23 +75,23 @@ jobs:
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       if: ${{ matrix.os != 'windows-latest' }}
       run: |
-        chmod +x ./build/_CPack_Packages/${{ matrix.run_alias }}/ZIP/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.run_alias }}/bin/runepanet
-        chmod +x ./build/_CPack_Packages/${{ matrix.run_alias }}/ZIP/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.run_alias }}/bin/runepanetmsx
-        ./build/_CPack_Packages/${{ matrix.run_alias }}/ZIP/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.run_alias }}/bin/runepanetmsx ./Examples/example.inp ./Examples/example.msx ./Examples/example.rpt ./Examples/example.out
+        chmod +x ./build-${{ matrix.alias }}/_CPack_Packages/${{ matrix.run_alias }}/ZIP/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.run_alias }}/bin/runepanet
+        chmod +x ./build-${{ matrix.alias }}/_CPack_Packages/${{ matrix.run_alias }}/ZIP/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.run_alias }}/bin/runepanetmsx
+        ./build-${{ matrix.alias }}/_CPack_Packages/${{ matrix.run_alias }}/ZIP/EPANETMSX-${{ env.BuildVersion }}-${{ matrix.run_alias }}/bin/runepanetmsx ./Examples/example.inp ./Examples/example.msx ./Examples/example.rpt ./Examples/example.out
       
     - name: Qualify darwin artifacts with os versions
       if: matrix.os == 'macos-13' || matrix.os == 'macos-14'
       run: |
-        cd build
+        cd build-${{ matrix.alias }}
         for file in *.zip; do mv "$file" "${file%.zip}-${{ matrix.alias }}.zip"; done
         for file in *.tar.gz; do mv "$file" "${file%.tar.gz}-${{ matrix.alias }}.tar.gz"; done
         cd ..
 
     - name: Upload artifacts
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: build-test-artifacts
+        name: build-artifacts-${{ matrix.alias }}
         path: |
-          build/*.zip
-          build/*.tar.gz
+          build-${{ matrix.alias }}/*.zip
+          build-${{ matrix.alias }}/*.tar.gz

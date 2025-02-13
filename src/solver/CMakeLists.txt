@@ -43,6 +43,14 @@ target_link_libraries(epanetmsx
         epanet2
 )
 
+# if openmp is availabe set USE_OPENMP define for target
+if(OpenMP_C_FOUND)
+    target_compile_definitions(epanetmsx
+        PUBLIC
+            USE_OPENMP
+    )
+endif()
+
 # Sets MSVC compiler flags
 target_compile_options(epanetmsx
     PUBLIC

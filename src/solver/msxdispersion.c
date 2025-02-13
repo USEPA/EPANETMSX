@@ -8,7 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#ifdef USE_OPENMP
 #include <omp.h>
+#endif
 
 #include "msxtypes.h"
 #include "dispersion.h"
@@ -27,12 +29,16 @@ static double* sol;                        //vector helping solve tridaigonal sy
 
 static double* gam;
 
+#ifdef USE_OPENMP
 #pragma omp threadprivate(al, bl, cl, rl, sol, gam)
+#endif
 
 int dispersion_open()
 {
 	int errcode=0;
-#pragma omp parallel
+	#ifdef USE_OPENMP
+	#pragma omp parallel
+	#endif
 	{
 		al = (double*)calloc(MSX.MaxSegments + 2, sizeof(double));
 		bl = (double*)calloc(MSX.MaxSegments + 2, sizeof(double));
@@ -40,7 +46,9 @@ int dispersion_open()
 		rl = (double*)calloc(MSX.MaxSegments + 2, sizeof(double));
 		sol = (double*)calloc(MSX.MaxSegments + 2, sizeof(double));
 		gam = (double*)calloc(MSX.MaxSegments + 2, sizeof(double));
+		#ifdef USE_OPENMP
 		#pragma omp critical
+		#endif
 		{
 			ERRCODE(MEMCHECK(al));
 			ERRCODE(MEMCHECK(bl));
@@ -57,7 +65,9 @@ int dispersion_open()
 int dispersion_close()
 {
 	int errcode = 0;
-#pragma omp parallel
+	#ifdef USE_OPENMP
+	#pragma omp parallel
+	#endif
 	{
 		FREE(al);
 		FREE(bl);
@@ -85,9 +95,13 @@ void dispersion_pipe(int m, double tstep)
 	double d0 = 1.292e-8;   //molecular diffusivity 1.292e-8 ft^2/s   1.2e-9 m^2/s
 	
 	d0 = MSX.Dispersion.md[m];
+	#ifdef USE_OPENMP
 	#pragma omp parallel
+	#endif
 	{
-		#pragma omp for private(seg, cons, vd, vu, vself, k, nseg, asquare, velocity, diam, area, flowrate, reynolds, dh, frictionfactor, shearvelocity, ldispersion, elpt)
+	#ifdef USE_OPENMP
+	#pragma omp for private(seg, cons, vd, vu, vself, k, nseg, asquare, velocity, diam, area, flowrate, reynolds, dh, frictionfactor, shearvelocity, ldispersion, elpt)
+	#endif
 		for (k = 1; k <= MSX.Nobjects[LINK]; k++)
 		{
 			
@@ -404,9 +418,13 @@ void   segqual_update(int m, double tstep)
 	double ldispersion = 0, massin = 0;
 	double area = 0.0;
 	int njuncs = MSX.Nobjects[NODE] - MSX.Nobjects[TANK];
-#pragma omp parallel
+	#ifdef USE_OPENMP
+	#pragma omp parallel
+	#endif
 	{
+		#ifdef USE_OPENMP
 		#pragma omp for private(k, n1, n2, seg, source, mass1, mass2, ldispersion, massin, area)
+		#endif
 		for (k = 1; k <= MSX.Nobjects[LINK]; k++)
 		{
 			mass1 = 0;
@@ -455,7 +473,9 @@ void   segqual_update(int m, double tstep)
 				massin = 2.0 * ldispersion * tstep * area * area * (MSX.Node[n2].c[m] - MSX.FirstSeg[k]->c[m]) * LperFT3 / MSX.FirstSeg[k]->v;
 				
 			}
-#pragma omp critical
+			#ifdef USE_OPENMP
+			#pragma omp critical
+			#endif
 			{
 				dispersedin += massin;
 			}
@@ -481,7 +501,9 @@ void   segqual_update(int m, double tstep)
 				massin = 2.0 * ldispersion * tstep * area * area * (MSX.Node[n1].c[m] - MSX.LastSeg[k]->c[m]) * LperFT3 / MSX.LastSeg[k]->v;
 				
 			}
-#pragma omp critical
+			#ifdef USE_OPENMP
+			#pragma omp critical
+			#endif
 			{
 				dispersedin += massin;
 			}
