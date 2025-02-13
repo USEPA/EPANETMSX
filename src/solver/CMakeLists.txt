@@ -11,7 +11,7 @@
 # list(APPEND CMAKE_LIBRARY_PATH "usr/local/opt/libomp")
 # list(APPEND CMAKE_LIBRARY_PATH "usr/local/opt/libomp/lib")
 find_package(OpenMP 
-    HINTS 
+    PATHS 
         "usr/local/opt" 
         "usr/local/opt/libomp" 
         "usr/local/opt/libomp/lib"
