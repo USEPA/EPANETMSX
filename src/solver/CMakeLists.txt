@@ -7,6 +7,7 @@
 #         US EPA ORD/CESER
 #
 
+list(APPEND CMAKE_LIBRARY_PATH "/opt/homebrew/lib")
 find_package(OpenMP)
 
 
@@ -42,6 +43,13 @@ target_link_libraries(epanetmsx
     PUBLIC
         epanet2
 )
+
+# if openmp is availabe set USE_OPENMP define for target
+if(OpenMP_C_FOUND)
+    target_compile_definitions(epanetmsx
+        PUBLIC
+            USE_OPENMP
+    )
 
 # Sets MSVC compiler flags
 target_compile_options(epanetmsx
