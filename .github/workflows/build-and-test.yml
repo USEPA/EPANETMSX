@@ -50,7 +50,7 @@ jobs:
     - name: Install OpenMP on MacOS
       if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macos-13' }}
       run: |
-        brew reinstall --build-from-source libomp
+        brew reinstall libomp
         brew link --force --overwrite libomp
 
     - name: Build
