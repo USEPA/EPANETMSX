@@ -45,31 +45,28 @@ char * MSXutils_getTempName(char *s)
 */
 {
 #ifdef WINDOWS
-    char *ptr;
-    char fname[L_tmpnam];
-    unsigned int i;
+    const int MAXFNAME = 259;
+    char* name = NULL;
 
-	// --- use tmpnam() function to create a temporary file name
-    tmpnam(fname);
-
-	// --- replace any '.' characters (they cause problems for some compilers)
-    for (i=0; i<strlen(fname); i++)
+    // --- use Windows _tempnam function to get a pointer to an
+    //     unused file name that begins with "msx"
+    strcpy(s, "");
+    name = _tempnam(NULL, "msx");
+    if (name)
     {
-	    if ( fname[i] == '.' ) fname[i] = '_';
+        // --- copy the file name to s
+        if (strlen(name) < MAXFNAME) strncpy(s, name, MAXFNAME);
+
+        // --- free the pointer returned by _tempnam
+        free(name);
     }
-
-	// --- set ptr to non-path portion of file name
-    ptr = strrchr(fname, '\\');
-    if ( ptr ) ++ptr;
-    else ptr = fname;
-
-	// --- use '.\' as path name to keep file in current directory
-	strcpy(s, ".\\");
-    strcat(s, ptr);
 #else
     // --- use system function mkstemp() to create a temporary file name
     strcpy(s, "msxXXXXXX");
-    mkstemp(s);
+    FILE* f = fdopen(mkstemp(s), "r");
+    if (f == NULL) strcpy(s, "");
+    else fclose(f);
+    remove(s);
 #endif
     return s;
 }
