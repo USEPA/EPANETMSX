@@ -39,6 +39,10 @@ set(CONFIG_DIST  "cmake")
 
 # Sets the position independent code property for all targets
 SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
+IF (MSVC)
+  set(CMAKE_C_FLAGS_RELEASE "/GL")
+  add_definitions(-D_CRT_SECURE_NO_DEPRECATE -MT)
+ENDIF (MSVC)
 
 
 # option(BUILD_TESTS "Build component tests (requires Boost)" OFF)
