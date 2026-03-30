@@ -23,6 +23,7 @@
 #include <string.h>
 #include <float.h>
 #include <stdlib.h>
+#include <locale.h>
 
 #include "msxtypes.h"
 #include "msxutils.h"                                                          
@@ -67,6 +68,7 @@ int MSXDLLEXPORT   MSXENopen(const char *inpFile, const char *rptFile, const cha
 */
 {
     int err = 0;
+    setlocale(LC_NUMERIC, "C");
     err = ENopen(inpFile, rptFile, outFile);
     return err;
 }
