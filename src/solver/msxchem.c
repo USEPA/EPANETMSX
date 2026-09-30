@@ -556,7 +556,7 @@ int evalPipeReactions(int k, double dt)
 
     // --- react each reacting species over the time step
 
-        if ( dt > 0.0 )
+        if ( dt > 0.0 && NumPipeRateSpecies > 0 )
         {
 
         // --- place current concentrations of species that react in vector Yrate
@@ -679,7 +679,7 @@ int evalTankReactions(int k, double dt)
 
     // --- react each reacting species over the time step
 
-        if ( dt > 0.0 )
+        if ( dt > 0.0 && NumTankRateSpecies > 0 )
         {
 
         // --- place current concentrations of species that react in vector Yrate
