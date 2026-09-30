@@ -59,7 +59,7 @@ static void  writeSrcFile(FILE* f);
 
 //=============================================================================
 
-int MSXcompiler_open()
+int MSXcompiler_open(void)
 /*
 **  Purpose:
 **    compiles MSX chemistry functions into a dynamic link library
@@ -161,7 +161,7 @@ int MSXcompiler_open()
 
 //=============================================================================
 
-void MSXcompiler_close()
+void MSXcompiler_close(void)
 /*
 **  Purpose:
 **    frees resources used to load chemistry functions from the shared

@@ -17,8 +17,8 @@ typedef enum {
 	OVERFLOWING    // tank overflowing
 } StatusType;
 
-int dispersion_open();
-int dispersion_close();
+int dispersion_open(void);
+int dispersion_close(void);
 void	dispersion_pipe(int m, double tstep);			//effective dispersion coefficient and upstream/downstream node impact calculation
 void    solve_nodequal(int m, double tstep);			//solve nodal concentration
 void    segqual_update(int m, double tstep);			//update pipe segment concentration

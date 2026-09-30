@@ -38,7 +38,7 @@ unsigned int hash(char *str)
     return( ( ( check1 << 8 )  |  sum1  ) % HTMAXSIZE);
 }
 
-HTtable *HTcreate()
+HTtable *HTcreate(void)
 {
         int i;
         HTtable *ht = (HTtable *) calloc(HTMAXSIZE, sizeof(HTtable));

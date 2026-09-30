@@ -43,7 +43,7 @@ extern MSXproject  MSX;                // MSX project data
 //static alloc_handle_t *QualPool;       // memory pool
 
 // Stagnant flow tolerance
-const double Q_STAGNANT = 0.005 / GPMperCFS;     // 0.005 gpm = 1.114e-5 cfs
+static const double Q_STAGNANT = 0.005 / GPMperCFS;     // 0.005 gpm = 1.114e-5 cfs
 
 //  Imported functions
 //--------------------
@@ -65,7 +65,7 @@ int    MSXout_saveFinalResults(void);
 
 void   MSXerr_clearMathError(void);                                            
 int    MSXerr_mathError(void);                                                 
-char*  MSXerr_writeMathErrorMsg(void);                                         
+void   MSXerr_writeMathErrorMsg(void);
 
 //  Exported functions
 //--------------------
@@ -100,14 +100,14 @@ static void findnodequal(int n, double volin, double* massin, double volout, dou
 static void noflowqual(int n);
 static void evalnodeinflow(int, double, double*, double*);
 static void evalnodeoutflow(int k, double* upnodequal, double tstep);
-static int sortNodes();
+static int sortNodes(void);
 static int selectnonstacknode(int numsorted, int* indegree);
 static void findstoredmass(double* mass);
 
 static void   evalHydVariables(int k);
 //=============================================================================
 
-int  MSXqual_open()
+int  MSXqual_open(void)
 /*
 **   Purpose:
 **     opens the WQ routing system.
@@ -211,7 +211,7 @@ int  MSXqual_open()
 
 //=============================================================================
 
-int  MSXqual_init()
+int  MSXqual_init(void)
 /*
 **  Purpose:
 **     re-initializes the WQ routing system.
@@ -531,7 +531,7 @@ double  MSXqual_getLinkQual(int k, int m)
 
 //=============================================================================
 
-int MSXqual_close()
+int MSXqual_close(void)
 /*
 **   Purpose:
 **     closes the WQ routing system.
@@ -599,7 +599,7 @@ int  MSXqual_isSame(double c1[], double c2[])
 
 //=============================================================================
 
-int  getHydVars()
+int  getHydVars(void)
 /*
 **   Purpose:
 **     retrieves hydraulic solution and time step for next hydraulic event
@@ -719,7 +719,7 @@ int  transport(int64_t tstep)
 
 //=============================================================================
 
-void  initSegs()
+void  initSegs(void)
 /*
 **   Purpose:
 **     initializes water quality in pipe segments.
@@ -820,7 +820,7 @@ void  initSegs()
 
 //=============================================================================
 
-int  flowdirchanged()
+int  flowdirchanged(void)
 /*
 **   Purpose:
 **     re-orients pipe segments (if flow reverses).
@@ -1568,7 +1568,7 @@ void findnodequal(int n, double volin, double* massin, double volout, double tst
 }
 
 
-int sortNodes()
+int sortNodes(void)
 /*
 **--------------------------------------------------------------
 **   Input:   none

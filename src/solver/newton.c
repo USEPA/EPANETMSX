@@ -66,7 +66,7 @@ int newton_open(int n)
 
 //=============================================================================
 
-void newton_close()
+void newton_close(void)
 /*
 **  Purpose:
 **    closes the algebraic solver.

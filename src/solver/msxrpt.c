@@ -78,11 +78,11 @@ static void  getHrsMins(int k, int *hrs, int *mins);
 static void  newPage(void);
 static void  writeLine(char *line);
 
-static void writemassbalance();
+static void writemassbalance(void);
 
 //=============================================================================
 
-int  MSXrpt_write()
+int  MSXrpt_write(void)
 {
     INT4  magic = 0;
     int  j;
@@ -125,7 +125,7 @@ void  MSXrpt_writeLine(char *line)
 
 //=============================================================================
 
-void createSeriesTables()
+void createSeriesTables(void)
 {
     int  j;
 
@@ -152,7 +152,7 @@ void createSeriesTables()
 
 //=============================================================================
 
-void createStatsTables()
+void createStatsTables(void)
 {
     int  j;
     int  count;
@@ -233,7 +233,7 @@ void createTableHdr(int objType, int tableType)
 
 //=============================================================================
 
-void  writeTableHdr()
+void  writeTableHdr(void)
 {
     if ( MSX.PageSize > 0 && MSX.PageSize - LineNum < 6 ) newPage();
     writeLine("");
@@ -322,7 +322,7 @@ void getHrsMins(int k, int *hrs, int *mins)
 
 //=============================================================================
 
-void  newPage()
+void  newPage(void)
 {
     char  s[MAXLINE+1];
     LineNum = 1;
@@ -346,7 +346,7 @@ void  writeLine(char *line)
 }
 
 
-void writemassbalance()
+void writemassbalance(void)
 /*
 **-------------------------------------------------------------
 **   Input:   none

@@ -38,7 +38,7 @@ void   MSXerr_writeMathErrorMsg(void);
 
 //=============================================================================
 
-void MSXerr_clearMathError()
+void MSXerr_clearMathError(void)
 /*
 **  Purpose:
 **    clears the math error flag.
@@ -50,7 +50,7 @@ void MSXerr_clearMathError()
 
 //=============================================================================
 
-int  MSXerr_mathError()
+int  MSXerr_mathError(void)
 /*
 **  Purpose:
 **    returns the current state of the math error flag.
@@ -61,7 +61,7 @@ int  MSXerr_mathError()
 
 //=============================================================================
 
-void MSXerr_writeMathErrorMsg()
+void MSXerr_writeMathErrorMsg(void)
 /*
 **  Purpose:
 **    writes math error message to EPANET report file.

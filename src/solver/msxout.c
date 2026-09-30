@@ -50,7 +50,7 @@ static void  getStatResults(int objType, int m, double* stats1,
 
 //=============================================================================
 
-int MSXout_open()
+int MSXout_open(void)
 /*
 **  Purpose:
 **    opens an MSX binary output file.
@@ -90,7 +90,7 @@ int MSXout_open()
 
 //=============================================================================
 
-int MSXout_saveInitialResults()
+int MSXout_saveInitialResults(void)
 /*
 **  Purpose:
 **    saves general information to beginning of MSX binary output file.
@@ -135,7 +135,7 @@ int MSXout_saveInitialResults()
 
 //=============================================================================
 
-int MSXout_saveResults()
+int MSXout_saveResults(void)
 /*
 **  Purpose:
 **    saves computed species concentrations for each node and link at the
@@ -174,7 +174,7 @@ int MSXout_saveResults()
 
 //=============================================================================
 
-int MSXout_saveFinalResults()
+int MSXout_saveFinalResults(void)
 /*
 **  Purpose:
 **    saves any statistical results plus the following information to the end
@@ -262,7 +262,7 @@ float MSXout_getLinkQual(int k, int j, int m)
 
 //=============================================================================
 
-int  saveStatResults()
+int  saveStatResults(void)
 /*
 **  Purpose:
 **    saves time statistic results (average, min., max., or range) for each

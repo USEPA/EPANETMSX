@@ -75,7 +75,7 @@ int rk5_open(int n, int itmax, int adjust)
 
 //=============================================================================
 
-void rk5_close()
+void rk5_close(void)
 /*
 **  Purpose:
 **    Closes the RK5 solver.

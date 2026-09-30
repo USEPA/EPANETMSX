@@ -95,7 +95,7 @@ int MSXfuncs_load(char * libName)
 
 //=============================================================================
 
-void MSXfuncs_free()
+void MSXfuncs_free(void)
 /*
 **  Purpose:
 **    frees the handle to the shared function library

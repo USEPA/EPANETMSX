@@ -63,7 +63,7 @@ static alloc_root_t *root;
 
 static alloc_hdr_t *AllocHdr(void);
                 
-static alloc_hdr_t * AllocHdr()
+static alloc_hdr_t * AllocHdr(void)
 {
     alloc_hdr_t     *hdr;
     char            *block;
@@ -88,7 +88,7 @@ static alloc_hdr_t * AllocHdr()
 **  Returns pointer to the new pool.
 */
 
-alloc_handle_t * AllocInit()
+alloc_handle_t * AllocInit(void)
 {
     alloc_handle_t *newpool;
 
@@ -173,7 +173,7 @@ alloc_handle_t * AllocSetPool(alloc_handle_t *newpool)
 **  so this is very fast.
 */
 
-void  AllocReset()
+void  AllocReset(void)
 {
     root->current = root->first;
     root->current->free = root->current->block;
@@ -187,7 +187,7 @@ void  AllocReset()
 **  Don't use where AllocReset() could be used.
 */
 
-void  AllocFreePool()
+void  AllocFreePool(void)
 {
     alloc_hdr_t  *tmp,
                  *hdr = root->first;

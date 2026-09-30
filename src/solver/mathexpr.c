@@ -158,7 +158,7 @@ int isLetter(char c)
 
 //=============================================================================
 
-void getToken()
+void getToken(void)
 {
     char c[] = " ";
     Token[0] = '\0';
@@ -174,7 +174,7 @@ void getToken()
 
 //=============================================================================
 
-int getMathFunc()
+int getMathFunc(void)
 {
     int i = 0;
     while (MathFunc[i] != NULL)
@@ -187,7 +187,7 @@ int getMathFunc()
 
 //=============================================================================
 
-int getVariable()
+int getVariable(void)
 {
     if (!getVariableIndex) return 0;
     Ivar = getVariableIndex(Token);
@@ -197,7 +197,7 @@ int getVariable()
 
 //=============================================================================
 
-double getNumber()
+double getNumber(void)
 {
     char c[] = " ";
     char sNumber[255];
@@ -261,7 +261,7 @@ double getNumber()
 
 //=============================================================================
 
-int getOperand()
+int getOperand(void)
 {
     int code;
     switch (S[Pos])
@@ -289,7 +289,7 @@ int getOperand()
 
 //=============================================================================
 
-int getLex()
+int getLex(void)
 {
     int n;
 
@@ -323,7 +323,7 @@ int getLex()
 
 //=============================================================================
 
-ExprTree* newNode()
+ExprTree* newNode(void)
 {
     ExprTree* node;
     node = (ExprTree*)malloc(sizeof(ExprTree));
@@ -451,7 +451,7 @@ ExprTree* getOp(int* lex)
 
 //=============================================================================
 
-ExprTree* getTree()
+ExprTree* getTree(void)
 {
     int      lex;
     int      opcode;

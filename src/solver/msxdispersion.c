@@ -33,7 +33,7 @@ static double* gam;
 #pragma omp threadprivate(al, bl, cl, rl, sol, gam)
 #endif
 
-int dispersion_open()
+int dispersion_open(void)
 {
 	int errcode=0;
 	#ifdef USE_OPENMP
@@ -62,7 +62,7 @@ int dispersion_open()
 
 }
 
-int dispersion_close()
+int dispersion_close(void)
 {
 	int errcode = 0;
 	#ifdef USE_OPENMP

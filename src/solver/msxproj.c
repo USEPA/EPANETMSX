@@ -85,8 +85,8 @@ static void   deleteHashTables(void);
 
 static int    openRptFile(void);                                               //(LR-11/20/07)
 
-static int  buildadjlists();
-static void freeadjlists();
+static int  buildadjlists(void);
+static void freeadjlists(void);
 
 
 //=============================================================================
@@ -165,7 +165,7 @@ int  MSXproj_open(char *fname)
 
 //=============================================================================
 
-void MSXproj_close()
+void MSXproj_close(void)
 /*
 **  Purpose:
 **    closes the current EPANET-MSX project.
@@ -293,7 +293,7 @@ char * MSXproj_getErrmsg(int errcode)
 
 //=============================================================================
 
-void setDefaults()
+void setDefaults(void)
 /*
 **  Purpose:
 **    assigns default values to project variables.
@@ -346,7 +346,7 @@ void setDefaults()
 
 //=============================================================================
 
-int convertUnits()
+int convertUnits(void)
 /*
 **  Purpose:
 **    converts user's units to internal EPANET units.
@@ -429,7 +429,7 @@ int convertUnits()
 
 //=============================================================================
 
-int createObjects()
+int createObjects(void)
 /*
 **  Purpose:
 **    creates multi-species data objects.
@@ -543,7 +543,7 @@ int createObjects()
 
 //=============================================================================
 
-void deleteObjects()
+void deleteObjects(void)
 /*
 **  Purpose:
 **    deletes multi-species data objects.
@@ -643,7 +643,7 @@ void deleteObjects()
 
 //=============================================================================
 
-int createHashTables()
+int createHashTables(void)
 /*
 **  Purpose:
 **    allocates memory for object ID hash tables.
@@ -673,7 +673,7 @@ int createHashTables()
 
 //=============================================================================
 
-void deleteHashTables()
+void deleteHashTables(void)
 /*
 **  Purpose:
 **    frees memory allocated for object ID hash tables.
@@ -701,7 +701,7 @@ void deleteHashTables()
 }
 
 // New function added (LR-11/20/07, to fix bug 08)
-int openRptFile()
+int openRptFile(void)
 {
     if ( MSX.RptFile.file ) fclose(MSX.RptFile.file);
     MSX.RptFile.file = fopen(MSX.RptFile.name, "wt");
@@ -709,7 +709,7 @@ int openRptFile()
     return 0;
 }
 
-int  buildadjlists()   //from epanet for node sorting in WQ routing
+int  buildadjlists(void)   //from epanet for node sorting in WQ routing
 /*
 **--------------------------------------------------------------
 ** Input:   none
@@ -764,7 +764,7 @@ int  buildadjlists()   //from epanet for node sorting in WQ routing
 }
 
 
-void  freeadjlists()            //from epanet for node sorting in WQ routing
+void  freeadjlists(void)            //from epanet for node sorting in WQ routing
 /*
 **--------------------------------------------------------------
 ** Input:   none

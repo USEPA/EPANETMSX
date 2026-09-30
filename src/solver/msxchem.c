@@ -96,7 +96,7 @@ static int    isValidNumber(double x);                                         /
 
 //=============================================================================
 
-int  MSXchem_open()
+int  MSXchem_open(void)
 /*
 **  Purpose:
 **    opens the multi-species chemistry system.
@@ -222,7 +222,7 @@ int  MSXchem_open()
 
 //=============================================================================
 
-void MSXchem_close()
+void MSXchem_close(void)
 /*
 **  Purpose:
 **    closes the multi-species chemistry system.
@@ -421,7 +421,7 @@ char* MSXchem_getVariableStr(int i, char *s)
 
 //=============================================================================
 
-void setSpeciesChemistry()
+void setSpeciesChemistry(void)
 /*
 **  Purpose:
 **    determines which species are described by reaction rate
@@ -480,7 +480,7 @@ void setSpeciesChemistry()
 
 //=============================================================================
 
-void setTankChemistry()
+void setTankChemistry(void)
 /*
 **  Purpose:
 **    assigns pipe chemistry expressions to tank chemistry for

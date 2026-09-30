@@ -52,7 +52,7 @@ extern MSXproject  MSX;                // MSX project data
 
 
 
-int  msx_createsparse()
+int  msx_createsparse(void)
 /*
 **--------------------------------------------------------------
 ** Input:   none                                                
@@ -127,7 +127,7 @@ int  msx_createsparse()
 }                        /* End of msx_createsparse */
 
 
-int  allocsparse()
+int  allocsparse(void)
 /*
 **--------------------------------------------------------------
 ** Input:   none                                              
@@ -158,7 +158,7 @@ int  allocsparse()
 }
 
 
-void  msx_freesparse()
+void  msx_freesparse(void)
 /*
 **----------------------------------------------------------------
 ** Input:   None                                                
@@ -270,7 +270,7 @@ int  paralink(int i, int j, int k)
 }                        /* End of paralink */
 
 
-void  xparalinks()
+void  xparalinks(void)
 /*
 **--------------------------------------------------------------
 ** Input:   none                                                
@@ -316,7 +316,7 @@ void  xparalinks()
 }                        /* End of xparalinks */
 
 
-void  freelists()
+void  freelists(void)
 /*
 **--------------------------------------------------------------
 ** Input:   none                                                
@@ -344,7 +344,7 @@ void  freelists()
 }                        /* End of freelists */
 
 
-void  countdegree()
+void  countdegree(void)
 /*
 **----------------------------------------------------------------
 ** Input:   none                                                
@@ -375,7 +375,7 @@ void  countdegree()
 }
 
 
-int   reordernodes()
+int   reordernodes(void)
 /*
 **--------------------------------------------------------------
 ** Input:   none                                                

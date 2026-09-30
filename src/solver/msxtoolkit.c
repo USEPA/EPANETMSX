@@ -37,7 +37,7 @@ extern MSXproject  MSX;                // MSX project data
 //  Imported functions
 //--------------------
 int    MSXproj_open(char *fname);
-int    MSXproj_close(void);
+void   MSXproj_close(void);
 int    MSXproj_addObject(int type, char *id, int n);
 int    MSXproj_findObject(int type, char *id);
 char * MSXproj_findID(int type, char *id);
@@ -114,7 +114,7 @@ int  MSXDLLEXPORT  MSXopen(char *fname)
 
 //=============================================================================
 
-int   MSXDLLEXPORT  MSXsolveH()
+int   MSXDLLEXPORT  MSXsolveH(void)
 /*
 **  Purpose:
 **    solves for system hydraulics which are written to a temporary file.
@@ -212,7 +212,7 @@ int   MSXDLLEXPORT  MSXusehydfile(char *fname)
 
 //=============================================================================
 
-int  MSXDLLEXPORT  MSXsolveQ()
+int  MSXDLLEXPORT  MSXsolveQ(void)
 /*
 **  Purpose:
 **    runs a MSX water quality analysis over the entire simulation period.
@@ -304,7 +304,7 @@ int  MSXDLLEXPORT  MSXsaveoutfile(char *fname)
 
 //=============================================================================
 
-int  MSXDLLEXPORT  MSXreport()
+int  MSXDLLEXPORT  MSXreport(void)
 /*
 **  Purpose:
 **    writes requested WQ simulation results to a text file.
@@ -328,7 +328,7 @@ int  MSXDLLEXPORT  MSXreport()
 
 //=============================================================================
 
-int  MSXDLLEXPORT  MSXclose()
+int  MSXDLLEXPORT  MSXclose(void)
 /*
 **  Purpose:
 **    closes the EPANET-MSX toolkit system.

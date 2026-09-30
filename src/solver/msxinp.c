@@ -108,7 +108,7 @@ static int    traceTermPath(int i, int istar, int n);
 
 //=============================================================================
 
-int MSXinp_countMsxObjects()
+int MSXinp_countMsxObjects(void)
 /*
 **  Purpose:
 **    reads multi-species input file to determine number of system objects.
@@ -176,7 +176,7 @@ int MSXinp_countMsxObjects()
 
 //=============================================================================
 
-int  MSXinp_countNetObjects()
+int  MSXinp_countNetObjects(void)
 /*
 **  Purpose:
 **    queries EPANET data base to determine number of network objects.
@@ -200,7 +200,7 @@ int  MSXinp_countNetObjects()
 
 //=============================================================================
 
-int MSXinp_readNetData()
+int MSXinp_readNetData(void)
 /*
 **  Purpose:
 **    retrieves required input data from the EPANET project data.
@@ -280,7 +280,7 @@ int MSXinp_readNetData()
 
 //=============================================================================
 
-int  MSXinp_readMsxData()
+int  MSXinp_readMsxData(void)
 /*
 **  Purpose:
 **    reads multi-species data from the EPANET-MSX input file.
@@ -638,7 +638,7 @@ int parseLine(int sect, char *line)
 
 //=============================================================================
 
-int parseOption()
+int parseOption(void)
 /*
 **  Purpose:
 **    parses an input line containing a project option.
@@ -729,7 +729,7 @@ int parseOption()
 
 //=============================================================================
 
-int parseSpecies()
+int parseSpecies(void)
 /*
 **  Purpose:
 **    parses an input line containing a species variable.
@@ -782,7 +782,7 @@ int parseSpecies()
 
 //=============================================================================
 
-int parseCoeff()
+int parseCoeff(void)
 /*
 **  Purpose:
 **    parses an input line containing a coefficient definition.
@@ -845,7 +845,7 @@ int parseCoeff()
 
 //=============================================================================
 
-int parseTerm()
+int parseTerm(void)
 /*
 **  Purpose:
 **    parses an input line containing an intermediate expression term .
@@ -955,7 +955,7 @@ int parseExpression(int classType)
 
 //=============================================================================
 
-int parseQuality()
+int parseQuality(void)
 /*
 **  Purpose:
 **    parses an input line containing initial species concentrations.
@@ -1027,7 +1027,7 @@ int parseQuality()
 
 //=============================================================================
 
-int parseParameter()
+int parseParameter(void)
 /*
 **  Purpose:
 **    parses an input line containing a parameter data.
@@ -1075,7 +1075,7 @@ int parseParameter()
 
 //=============================================================================
 
-int parseSource()
+int parseSource(void)
 /*
 **  Purpose:
 **    parses an input line containing a source input data.
@@ -1154,7 +1154,7 @@ int parseSource()
 
 //=============================================================================
 
-int parsePattern()
+int parsePattern(void)
 /*
 **  Purpose:
 **    parses an input line containing a time pattern data.
@@ -1205,7 +1205,7 @@ int parsePattern()
 
 //=============================================================================
 
-int parseReport()
+int parseReport(void)
 {
     int  i, j, k, err;
 
@@ -1287,7 +1287,7 @@ int parseReport()
     return 0;
 }
 
-int parseDiffu()
+int parseDiffu(void)
 /*
 **  Purpose:
 **    parses an input line containing molecular diffusivity data.
@@ -1443,7 +1443,7 @@ void writeInpErrMsg(int errcode, char *sect, char *line, int lineCount)
 
 //=============================================================================
 
-int checkCyclicTerms()                                                         
+int checkCyclicTerms(void)
 /*
 **  Purpose:
 **    checks for cyclic references in Term expressions (e.g., T1 = T2 + T3

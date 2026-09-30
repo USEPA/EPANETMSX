@@ -72,7 +72,7 @@ int ros2_open(int n, int adjust)
 
 //=============================================================================
 
-void ros2_close()
+void ros2_close(void)
 /*
 **  Purpose:
 **    closes the ROS2 integrator.
